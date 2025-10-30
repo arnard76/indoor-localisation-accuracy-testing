@@ -1,0 +1,70 @@
+@import 'tailwindcss';
+
+body {
+	@apply m-0 box-border;
+}
+
+h1 {
+	@apply mb-2 pt-4 text-4xl font-semibold;
+}
+
+h2 {
+	@apply mt-4 mb-2 text-3xl;
+}
+
+h3 {
+	@apply mt-4 mb-2 text-2xl;
+}
+
+.button-group {
+	@apply flex;
+}
+
+.button-group button {
+	@apply rounded-none;
+}
+
+.button-group button:first-child {
+	@apply rounded-l-2xl;
+}
+
+.button-group button:last-child {
+	@apply rounded-r-2xl;
+}
+
+button,
+a.button {
+	@apply m-0 mt-2 block cursor-pointer rounded-2xl bg-green-300 px-8 py-2 text-nowrap;
+}
+
+button.unselected {
+	@apply bg-gray-300/5 text-gray-50/25;
+}
+
+button.selected {
+	@apply bg-green-700;
+}
+
+/* FORMS AND INPUTS */
+
+input {
+	border: 1px solid lightgray;
+	@apply rounded-lg;
+}
+
+form {
+	@apply flex flex-col items-start gap-4 p-4;
+}
+
+form label {
+	@apply flex flex-col;
+}
+
+/* MAP styles */
+.debug-panel input {
+	@apply w-12;
+}
+
+.debug-panel .widget {
+	@apply rounded-md bg-black p-4;
+}

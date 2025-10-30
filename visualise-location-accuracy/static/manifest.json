@@ -1,0 +1,15 @@
+{
+	"name": "Indoor Localisation Accuracy",
+	"short_name": "IndoorLocationAccuracy",
+	"start_url": "/",
+	"display": "standalone",
+	"display_override": "minimal-ui",
+	"description": "This app can be used to visualise the accuracy of an indoor localisation application by comparing it with locations measured with computer-vision method.",
+	"icons": [
+		{
+			"src": "/favicons/android-chrome-192x192.png",
+			"sizes": "192x192"
+		}
+	],
+	"screenshots": []
+}
