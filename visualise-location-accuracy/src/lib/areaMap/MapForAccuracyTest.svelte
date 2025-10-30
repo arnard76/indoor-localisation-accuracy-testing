@@ -16,7 +16,7 @@
 	import { mapImageUrls } from './area';
 	import AreaMap from './AreaMap.svelte';
 
-	let currentFloor = $state(1);
+	let currentFloor = $state(Object.keys($mapImageUrls)[0]);
 	let origin = $state({ x: 0, y: 0 }); // TODO: keep this in the right pixels scale too
 	let rawPosition = $state({ x: 0, y: 0 });
 	let calculated = $derived({ x: rawPosition.x - origin.x, y: origin.y - rawPosition.y });
@@ -54,7 +54,7 @@
 </script>
 
 <div>
-	<AreaMap mapImageURL={$mapImageUrls[currentFloor.toString()]} bind:rawPosition>
+	<AreaMap mapImageURL={$mapImageUrls[currentFloor]} bind:rawPosition>
 		<!-- <Map {currentFloor} bind:rawPosition> -->
 		{#snippet mapLocations()}
 			<MapLocation
@@ -133,7 +133,12 @@
 				/>
 			</fieldset>
 			<label for="floor_input">Floor</label>
-			<input
+			<select id="floor_input" bind:value={currentFloor}>
+				{#each Object.keys($mapImageUrls) as mapLabel (mapLabel)}
+					<option value={mapLabel}>{mapLabel}</option>
+				{/each}
+			</select>
+			<!-- <input
 				id="floor_input"
 				value={currentFloor}
 				oninput={(e) => {
@@ -141,7 +146,7 @@
 					if (!Number.isNaN(floor_input)) currentFloor = floor_input;
 				}}
 				type="number"
-			/>
+			/> -->
 		</div>
 
 		<div class="widget min-w-96">

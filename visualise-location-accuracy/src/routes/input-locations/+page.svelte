@@ -68,6 +68,8 @@
 </form>
 
 {#if status}
-	<p>{status}</p>
-	<a href="/" class="button">Start test</a>
+	<div class="flex flex-col items-start">
+		<p>{status}</p>
+		<a href="/" class="button">Start test</a>
+	</div>
 {/if}
