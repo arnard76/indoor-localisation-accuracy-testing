@@ -69,5 +69,5 @@
 
 {#if status}
 	<p>{status}</p>
-	<a href="/">Start the test</a>
+	<a href="/" class="button">Start test</a>
 {/if}
