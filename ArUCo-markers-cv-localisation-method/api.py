@@ -109,8 +109,7 @@ def calculate_locations(inputs:InputsForArucoCVLocations):
         video_start_time,
         ARUCO_DICT[aruco_dict_type],
         aruco_marker_length,
-        camera,
-        visualise=True,
+        camera
     )
 
     print(locations)
