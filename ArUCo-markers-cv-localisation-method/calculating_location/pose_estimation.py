@@ -119,7 +119,7 @@ def estimate_marker_pose(frame, aruco_dict_type, aruco_marker_length, camera: Ca
             return {"augmented_frame": augmented_frame,  "location_from_camera": {"rotation": marker_rotation_degrees, "translation": marker_translation_metres}}
 
 
-def find_marker_locations_from_video(video_source, video_start_time: datetime, aruco_dict_type,  aruco_marker_length, camera: Camera):
+def find_marker_locations_from_video(video_source, video_start_time: datetime, aruco_dict_type,  aruco_marker_length, camera: Camera, visualise=False):
     """
     video_source = video file path or camera index (for live video)
     """
@@ -164,10 +164,10 @@ def find_marker_locations_from_video(video_source, video_start_time: datetime, a
 
         else:
             output_frame = frame
-
-        output_frame = cv2.resize(
-            output_frame, None, fx=resize, fy=resize)
-        cv2.imshow('ArUco Marker Pose', output_frame)
+        if visualise:
+            output_frame = cv2.resize(
+                output_frame, None, fx=resize, fy=resize)
+            cv2.imshow('ArUco Marker Pose', output_frame)
 
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
