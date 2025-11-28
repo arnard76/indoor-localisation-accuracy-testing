@@ -30,6 +30,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+cameras_path = os.path.join("camera_calibration", "previously_calibrated_cameras")
+input_videos_for_locations = os.path.join("calculating_location", "input_videos")
+locations_output = os.path.join("calculating_location", "output")
+app_folders = [cameras_path, input_videos_for_locations, locations_output]
+
+for folder in app_folders:
+    if not os.path.exists(folder):
+        os.mkdir(folder)
+
 class InputsForArucoCVLocations(BaseModel):
     megaLink: str
     videoStartDateTime: str  # is this available from mega?
