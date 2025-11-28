@@ -1,0 +1,34 @@
+[project]
+name = "aruco_markers_cv_localisation_arnard76"
+version = "0.0.4"
+authors = [
+  { name="Arnav Shekaran", email="arnard76@gmail.com" },
+]
+description = "The purpose of this module is to convert a video with an aruco marker in it into an array of locations & timestamps"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+ dependencies = [
+    "numpy",
+    "opencv-python",
+    "tzdata"
+]
+
+[project.urls]
+Homepage = "https://github.com/arnard76/indoor-localisation-accuracy-testing/tree/master/ArUCo-markers-cv-localisation-method"
+Issues = "https://github.com/arnard76/indoor-localisation-accuracy-testing/issues"
+
+[build-system]
+requires = [
+    "hatchling >= 1.26",
+    "numpy==2.2.6",
+    "opencv-python==4.12.0.88",
+    "tzdata==2025.2",
+
+]
+build-backend = "hatchling.build"

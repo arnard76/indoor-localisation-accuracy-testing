@@ -1,0 +1,9 @@
+name = "Aruco CV Locator"
+description = "The purpose of this module is to convert a video into an array of locations & timestamps"
+packages = ["numpy","opencv-python","tzdata", "pycryptodome", "requests", "aruco-markers-cv-localisation-arnard76==0.0.4"]
+
+[[fetch]]
+files = [
+    "camera_calibration/previously_calibrated_cameras/Arnav phone/distortion_coefficients.npy",
+    "camera_calibration/previously_calibrated_cameras/Arnav phone/intrinsic_matrix.npy"
+]

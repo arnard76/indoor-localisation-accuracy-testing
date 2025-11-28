@@ -1,0 +1,6 @@
+*cache*
+# camera_calibration/output
+# camera_calibration/input*
+# camera_calibration/previously_calibrated_cameras
+# calculating_location/input_videos
+# calculating_location/output
