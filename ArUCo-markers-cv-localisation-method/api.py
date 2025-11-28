@@ -36,12 +36,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount(
-    "/aruco-cv-videos",
-    StaticFiles(directory="calculating_location/input_videos"),
-    name="static",
-)
-
 class InputsForArucoCVLocations(BaseModel):
     megaLink: str
     videoStartDateTime: str  # is this available from mega?
