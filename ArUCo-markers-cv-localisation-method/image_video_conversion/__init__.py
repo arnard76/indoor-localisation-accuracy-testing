@@ -1,5 +1,6 @@
 import cv2
 import os
+import shutil
 import numpy as np
 
 
@@ -30,3 +31,8 @@ def video_to_frames(video_file_name: str, output_folder: str):
 
     video.release()
     cv2.destroyAllWindows()
+
+
+def delete_frames_after_use(frames_output_folder:str):
+    if os.path.exists(frames_output_folder):
+        shutil.rmtree(frames_output_folder, ignore_errors=False)
