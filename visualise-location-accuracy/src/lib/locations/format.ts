@@ -2,10 +2,20 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { pixelsToMetresScale } from './metreScale';
 
-export type LocationReading = { location: number[]; timestamp: string | Dayjs };
+export type ImportableLocationReading = { location: number[]; timestamp: string };
 export type MapLocation = { x: number; y: number };
+export type MapPosition = {
+	x: number;
+	y: number;
+	orientation: number;
+};
+export type LocationReading = MapLocation & { timestamp: string | Dayjs };
+export type PositionReading = MapPosition & { timestamp: string | Dayjs };
+
 export type LocationUnits = 'metres' | 'pixels';
 export type MapLocations = { [key: string]: MapLocation };
+
+export const nullLocation: MapLocation = { x: NaN, y: NaN };
 
 export function scaleLocation(location: MapLocation, scale: number): MapLocation {
 	return {

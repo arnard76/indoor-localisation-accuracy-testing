@@ -1,87 +1,68 @@
 <script lang="ts">
-	import MapLocation from '$lib/areaMap/MapLocation.svelte';
-	import {
-		currentArucoLocation as arucoTestLocation,
-		currentWifinderLocation as wifinderLocation
-	} from '$lib/locations/currentLocations';
+	import MapPosition from '$lib/areaMap/MapPosition.svelte';
 	import {
 		convertLocationFromFormat,
-		convertLocationsFromFormat,
 		displayLocation,
-		scaleLocations,
-		type LocationUnits,
-		type MapLocations as MapLocationsType
+		type LocationUnits
 	} from '$lib/locations/format';
-	import { mapImagePixelsToScreenPixelsScale } from '../locations/pixelScale';
+	import type { createPlayer } from '$lib/test/playbackTimes';
+	import { distanceDiffFromLocationDiff, locationDiff } from '$lib/test/positionAccuracy';
 	import { mapImageUrls } from './area';
 	import AreaMap from './AreaMap.svelte';
 
+	let { player }: { player: ReturnType<typeof createPlayer> } = $props();
+
 	let currentFloor = $state(Object.keys($mapImageUrls)[0]);
 	let origin = $state({ x: 0, y: 0 }); // TODO: keep this in the right pixels scale too
-	let rawPosition = $state({ x: 0, y: 0 });
-	let calculated = $derived({ x: rawPosition.x - origin.x, y: origin.y - rawPosition.y });
+	let rawPixelPosition = $state({ x: 0, y: 0 });
+	let rawPosition = $derived(convertLocationFromFormat(rawPixelPosition, 'pixels'));
 
-	let locationsInPixels = $derived({
+	let locationsInMetres = $derived({
 		Origin: origin,
 		Raw: rawPosition,
-		Calculated: calculated,
-		'App Estimated Location': convertLocationFromFormat($wifinderLocation, 'metres'),
-		'ArUCo-marker Test': convertLocationFromFormat($arucoTestLocation, 'metres')
+		...$player!.currentLocations
 	});
 
-	let locationsInScreenPixels = $derived(
-		scaleLocations(locationsInPixels, $mapImagePixelsToScreenPixelsScale)
-	);
-	let locationsInMetres = $derived({
-		...convertLocationsFromFormat(locationsInPixels, 'pixels'),
-		'App Estimated Location': $wifinderLocation,
-		'ArUCo-marker Test': $arucoTestLocation
-	});
+	$inspect(locationsInMetres);
 
-	let distanceUnit = $state<LocationUnits>('metres');
-	let locations = $derived<MapLocationsType>(
-		distanceUnit === 'pixels' ? locationsInPixels : locationsInMetres
+	let displayUnit = $state<LocationUnits>('metres');
+
+	let locationDifference = $derived(
+		locationDiff(locationsInMetres['wifinder'], locationsInMetres['aruco'])
 	);
 
-	let locationDifference = $derived({
-		x: locations['App Estimated Location'].x - locations['ArUCo-marker Test'].x,
-		y: locations['App Estimated Location'].y - locations['ArUCo-marker Test'].y
-	});
-
-	let distanceDifference = $derived(
-		Math.sqrt(locationDifference.x ** 2 + locationDifference.y ** 2)
-	);
+	let distanceDifference = $derived(distanceDiffFromLocationDiff(locationDifference));
 </script>
 
 <div>
 	<AreaMap mapImageURL={$mapImageUrls[currentFloor]} bind:rawPosition>
-		<!-- <Map {currentFloor} bind:rawPosition> -->
 		{#snippet mapLocations()}
-			<MapLocation
-				unit={distanceUnit}
-				name="Calculated"
-				position={locationsInScreenPixels['Raw']}
-				displayedPosition={locations['Calculated']}
-			/>
-			<MapLocation
-				unit={distanceUnit}
-				position={locationsInScreenPixels['Origin']}
+			<!-- <MapShapeOverTime /> -->
+			<MapPosition inputUnit="pixels" {displayUnit} position={locationsInMetres['Raw']} {origin} />
+			<MapPosition
+				{displayUnit}
+				inputUnit="metres"
+				position={locationsInMetres['Origin']}
 				colour="oklch(62.3% 0.214 259.815)"
+				{origin}
 			/>
 
-			<MapLocation
-				unit={distanceUnit}
+			<MapPosition
+				inputUnit="metres"
+				{displayUnit}
 				name="WiFinder"
-				position={locationsInScreenPixels['App Estimated Location']}
-				displayedPosition={locations['App Estimated Location']}
+				position={locationsInMetres['wifinder']}
 				colour="powderblue"
+				{origin}
 			/>
-			<MapLocation
-				unit={distanceUnit}
-				name="ArUCo-marker Test"
-				displayedPosition={locations['ArUCo-marker Test']}
-				position={locationsInScreenPixels['ArUCo-marker Test']}
+
+			<MapPosition
+				inputUnit="metres"
+				{displayUnit}
+				name="CV measured location"
+				position={locationsInMetres['aruco']}
 				colour="#50a9be"
+				{origin}
 			/>
 		{/snippet}
 		<!-- </Map> -->
@@ -95,12 +76,12 @@
 			<h3>Units</h3>
 			<div class="button-group">
 				<button
-					onclick={() => (distanceUnit = 'metres')}
-					class={distanceUnit === 'metres' ? 'selected' : 'unselected'}>metres</button
+					onclick={() => (displayUnit = 'metres')}
+					class={displayUnit === 'metres' ? 'selected' : 'unselected'}>metres</button
 				>
 				<button
-					onclick={() => (distanceUnit = 'pixels')}
-					class={distanceUnit === 'pixels' ? 'selected' : 'unselected'}>pixels</button
+					onclick={() => (displayUnit = 'pixels')}
+					class={displayUnit === 'pixels' ? 'selected' : 'unselected'}>pixels</button
 				>
 			</div>
 		</div>
@@ -127,7 +108,7 @@
 					type="number"
 					oninput={(e) => {
 						let y_origin_input = parseInt(e.currentTarget.value);
-						if (distanceUnit === 'metres')
+						if (displayUnit === 'metres')
 							if (!Number.isNaN(y_origin_input)) origin.y = y_origin_input;
 					}}
 				/>
@@ -151,11 +132,21 @@
 
 		<div class="widget min-w-96">
 			<h3>Locations</h3>
-			{#each Object.entries(locations) as [locationName, location] (locationName)}
-				<p>{locationName} | {displayLocation(location, distanceUnit)}</p>
+			{#each Object.entries(locationsInMetres) as [locationName, location] (locationName)}
+				<p>
+					{locationName} | {displayLocation(
+						convertLocationFromFormat(location, 'metres', displayUnit),
+						displayUnit
+					)}
+				</p>
 			{/each}
 			<br />
-			<p>Location Difference | {displayLocation(locationDifference, distanceUnit)}</p>
+			<p>
+				Location Difference | {displayLocation(
+					convertLocationFromFormat(locationDifference, 'metres', displayUnit),
+					displayUnit
+				)}
+			</p>
 			<p>Distance Difference: {distanceDifference.toFixed(3)}</p>
 		</div>
 	</div>

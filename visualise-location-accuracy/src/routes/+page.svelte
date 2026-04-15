@@ -4,28 +4,31 @@
 	import MapForWiFinderTest from '$lib/areaMap/MapForAccuracyTest.svelte';
 	import TestControls from '$lib/test/TestControls.svelte';
 	import TestResults from '$lib/test/TestResults.svelte';
-	import { arucoLocationData, wiFinderLocationData } from '$lib/locations/locationsData';
 	import { mapImageUrls } from '$lib/areaMap/area';
+	import { createPlayer } from '$lib/test/playbackTimes';
+	import { locations } from '$lib/locations/locationsData';
 
 	$effect(() => {
 		if (Object.keys($mapImageUrls).length === 0) {
 			goto('/change-map');
 			return;
 		}
-		if (!$arucoLocationData.length || !$wiFinderLocationData.length) goto('/input-locations');
+		if (!$locations.aruco || !$locations.wifinder) goto('/input-locations');
 	});
+
+	const player = createPlayer();
 </script>
 
 <main class="flex h-screen flex-col justify-between overflow-hidden bg-green-400">
 	<div class="flex w-full flex-1 gap-2 overflow-y-auto">
 		<div class="flex w-full">
-			<MapForWiFinderTest />
+			<MapForWiFinderTest {player} />
 		</div>
-		<div class="max-w-1/2 flex w-full flex-col gap-2">
-			<TestResults />
-			<ArucoCVVideoPreview />
+		<div class="flex w-full max-w-1/2 flex-col gap-2">
+			<TestResults {player} />
+			<ArucoCVVideoPreview {player} />
 		</div>
 	</div>
 
-	<TestControls />
+	<TestControls {player} />
 </main>

@@ -39,16 +39,20 @@
 
 <form>
 	<label>
-		Actual Location Logs (from localisation app)
+		Target Locations (e.g. specified by task or )
+		<input type="file" bind:files={arucoTestJsonFile} accept=".json" />
+	</label>
+	<label>
+		Internal Estimated Locations <br />(e.g. logs from localisation app, wheel-sensor, odometer)
 		<input type="file" bind:files={wifinderJsonFile} accept=".json" />
 	</label>
 	<label>
-		Aruco Test Locations
+		Actual Locations (e.g. measured by ruler, CV system)
 		<input type="file" bind:files={arucoTestJsonFile} accept=".json" />
 	</label>
 
 	<label>
-		Aruco Video URL (optional)
+		Video URL of Movements (optional)
 		<input type="text" bind:value={arucoVideoURL} />
 	</label>
 

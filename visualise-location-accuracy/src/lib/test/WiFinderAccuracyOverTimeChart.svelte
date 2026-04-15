@@ -3,15 +3,16 @@
 	import { Chart } from 'chart.js/auto';
 	import annotation from 'chartjs-plugin-annotation';
 	import dayjs from 'dayjs';
-	import { wiFinderLocationData } from '$lib/locations/locationsData';
-	import { currentPlayingTimeSeconds, startTimeForTestPreview } from './playbackTimes';
-	import { averageWifinderAccuracy, wiFinderLocationAccuracy } from './wifinderAccuracy';
+	import { averageWifinderAccuracy, wiFinderLocationAccuracy } from './positionAccuracy';
+	import type { createPlayer } from './playbackTimes';
+	import { locations } from '$lib/locations/locationsData';
+	let { player }: { player: ReturnType<typeof createPlayer> } = $props();
 
 	C.register(annotation);
 
 	let data = $derived({
-		labels: $wiFinderLocationData.map(({ timestamp }) =>
-			dayjs(timestamp).diff($startTimeForTestPreview, 'seconds')
+		labels: $locations['wifinder'].map(({ timestamp }) =>
+			dayjs(timestamp).diff($player.startTimeForTestPreview, 'seconds')
 		),
 		datasets: [
 			{
@@ -91,8 +92,8 @@
 		$effect(() => {
 			myChart.data = data;
 			myChart.update();
-			const unsub = currentPlayingTimeSeconds.subscribe((v) => {
-				myChart.options = options(v) as any;
+			const unsub = player.subscribe((v) => {
+				myChart.options = options(v.currentPlayingTimeSeconds) as any;
 				myChart.update();
 			});
 

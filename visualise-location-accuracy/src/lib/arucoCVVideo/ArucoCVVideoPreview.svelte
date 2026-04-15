@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { arucoVideoElement, arucoVideoSource } from './';
-	import { currentPlayingTimeSeconds } from '$lib/test/playbackTimes';
+	import { createPlayer } from '$lib/test/playbackTimes';
+
+	let { player }: { player: ReturnType<typeof createPlayer> } = $props();
+
+	let { currentPlayingTimeSeconds } = player;
 </script>
 
 {#if $arucoVideoSource}
