@@ -4,25 +4,24 @@
 	import annotation from 'chartjs-plugin-annotation';
 	import dayjs from 'dayjs';
 	import { averageWifinderAccuracy, wiFinderLocationAccuracy } from './positionAccuracy';
-	import type { createPlayer } from './playbackTimes';
-	import { locations } from '$lib/locations/locationsData';
+	import { type createPlayer } from './playbackTimes';
 	let { player }: { player: ReturnType<typeof createPlayer> } = $props();
 
 	C.register(annotation);
 
-	let data = $derived({
-		labels: $locations['wifinder'].map(({ timestamp }) =>
+	let data = {
+		labels: $wiFinderLocationAccuracy.map(({ timestamp }) =>
 			dayjs(timestamp).diff($player.startTimeForTestPreview, 'seconds')
 		),
 		datasets: [
 			{
-				data: $wiFinderLocationAccuracy,
+				data: $wiFinderLocationAccuracy.map(({ distanceDiff }) => distanceDiff),
 				fill: false,
 				borderColor: 'rgb(75, 192, 192)',
 				tension: 0.1
 			}
 		]
-	});
+	};
 
 	let options = (currTime: number): ChartOptions => ({
 		plugins: {

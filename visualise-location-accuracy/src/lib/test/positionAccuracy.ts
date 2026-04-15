@@ -42,9 +42,12 @@ export function compareLocations(locations1: LocationReading[], locations2: Loca
 			// calculate difference between average aruco location and wifinder location
 			const locationDifference = locationDiff({ x, y }, averageArucoLocation);
 
-			return distanceDiffFromLocationDiff(locationDifference);
+			return {
+				timestamp: wifinderTimestamp,
+				distanceDiff: distanceDiffFromLocationDiff(locationDifference)
+			};
 		})
-		.filter((average) => average < 400);
+		.filter(({ distanceDiff }) => distanceDiff < 400);
 }
 
 // accuracy of each wifinder point at every second
@@ -57,12 +60,12 @@ export const averageWifinderAccuracy = derived(
 	wiFinderLocationAccuracy,
 	($wiFinderLocationAccuracy) => {
 		const validAccuracyValues = $wiFinderLocationAccuracy.filter(
-			(accuracy) => !Number.isNaN(accuracy)
+			(accuracy) => !Number.isNaN(accuracy.distanceDiff)
 		);
 		let total = 0;
 
 		validAccuracyValues.forEach((accuracy) => {
-			total += accuracy;
+			total += accuracy.distanceDiff;
 		});
 		return Math.round((100 * total) / validAccuracyValues.length) / 100;
 	},
