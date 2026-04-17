@@ -1,10 +1,24 @@
 <script lang="ts">
+	import DifferenceDistanceOverTimeChart from './DifferenceDistanceOverTimeChart.svelte';
 	import type { createPlayer } from './playbackTimes';
-	import { averageWifinderAccuracy } from './positionAccuracy';
-	import WiFinderAccuracyOverTimeChart from './WiFinderAccuracyOverTimeChart.svelte';
-	let { player }: { player: ReturnType<typeof createPlayer> } = $props();
+	import { type createAccuracyCalculator } from './positionAccuracy';
+	let {
+		player,
+		accuracyCalculator
+	}: {
+		player: ReturnType<typeof createPlayer>;
+		accuracyCalculator: ReturnType<typeof createAccuracyCalculator>;
+	} = $props();
 </script>
 
-<h3>Average Accuracy: {$averageWifinderAccuracy} metres</h3>
-
-<WiFinderAccuracyOverTimeChart {player} />
+{#each $accuracyCalculator as comparison (comparison.idealSet + comparison.setToMeasure)}
+	<h3>
+		{comparison.idealSet}/{comparison.setToMeasure} average difference in distance (accuracy): {comparison.average}
+		metres
+	</h3>
+	<DifferenceDistanceOverTimeChart
+		{player}
+		averageAccuracy={comparison.average}
+		distanceDiffs={comparison.diffs}
+	/>
+{/each}

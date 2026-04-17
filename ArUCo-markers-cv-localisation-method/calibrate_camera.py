@@ -8,7 +8,7 @@ from camera_calibration import calibrate, save_calibration_details
 # Input: Calibration Video
 # Turn Callibration Video for Camera Into Frames
 calibration_video_input_folder = "./camera_calibration/previously_calibrated_cameras/"
-camera_filename = "chessboard calibration - Arnav phone.mp4"
+camera_filename = "Mohammed Phone.MOV"
 camera_filename_without_file_type = camera_filename.split(".")[0]
 frames_folder = camera_filename_without_file_type + "/frames"
 video_to_frames(calibration_video_input_folder + camera_filename,

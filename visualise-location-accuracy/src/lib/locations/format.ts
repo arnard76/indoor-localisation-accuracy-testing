@@ -55,8 +55,14 @@ export function convertLocationsFromFormat(locationsInFormat: MapLocations, from
 }
 
 export function displayLocation(location: MapLocation, unit: LocationUnits): string {
-	const rounding = unit === 'pixels' ? 0 : 2;
-	return `X: ${location.x.toFixed(rounding)}, Y: ${location.y.toFixed(rounding)}`;
+	try {
+		const rounding = unit === 'pixels' ? 0 : 2;
+		return `(${location.x.toFixed(rounding)}, ${location.y.toFixed(rounding)})`;
+	} catch (e) {
+		console.log(e);
+		console.log({ location, unit });
+		throw Error(e);
+	}
 }
 
 /**

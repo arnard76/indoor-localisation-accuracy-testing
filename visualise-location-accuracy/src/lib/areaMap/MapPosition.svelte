@@ -19,7 +19,8 @@
 		name = '',
 		tooltipClasses = '',
 		tooltipStyle = '',
-		orientation
+		orientation,
+		fixed = false
 	}: {
 		origin: MapLocation;
 		position: MapLocation;
@@ -30,9 +31,10 @@
 		tooltipClasses?: string;
 		tooltipStyle?: string;
 		orientation?: number;
+		fixed?: boolean;
 	} = $props();
 
-	const positionFromOrigin = $derived({ x: position.x - origin.x, y: position.y - origin.y });
+	const positionFromOrigin = $derived({ x: position.x + origin.x, y: position.y + origin.y });
 	const locationToShow = $derived(
 		convertLocationFromFormat(positionFromOrigin, inputUnit, displayUnit)
 	);
@@ -53,21 +55,33 @@
 	</p>
 {/if}
 
-<div
-	class="location_square"
-	style="background-color: {colour}; transform: translate(calc({screenPixelLocation.x}px - 50%), calc({screenPixelLocation.y}px - 50%)) {orientation !==
-	undefined
-		? `rotate(${orientation}deg)`
-		: ''};"
->
-	{#if orientation !== undefined}
-		<Icon
-			icon="tabler:arrow-narrow-right-dashed"
-			class="absolute top-1/2 left-full pl-1.5 "
-			style="transform: translate(-50%, -50%);"
-		/>
-	{/if}
-</div>
+{#if fixed === true}
+	<div
+		class="location_square flex items-center justify-center"
+		style="color: {colour}; transform: translate(calc({screenPixelLocation.x}px - 50%), calc({screenPixelLocation.y}px - 50%)) {orientation !==
+		undefined
+			? `rotate(${orientation}deg)`
+			: ''};"
+	>
+		<Icon icon="tabler:x" />
+	</div>
+{:else}
+	<div
+		class="location_square"
+		style="background-color: {colour}; transform: translate(calc({screenPixelLocation.x}px - 50%), calc({screenPixelLocation.y}px - 50%)) {orientation !==
+		undefined
+			? `rotate(${orientation}deg)`
+			: ''};"
+	>
+		{#if orientation !== undefined}
+			<Icon
+				icon="tabler:arrow-narrow-right-dashed"
+				class="absolute top-1/2 left-full pl-1.5 "
+				style="transform: translate(-50%, -50%);"
+			/>
+		{/if}
+	</div>
+{/if}
 
 <style lang="postcss">
 	.location_square {

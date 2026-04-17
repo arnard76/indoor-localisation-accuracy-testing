@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { mapImageUrls } from '$lib/areaMap/area';
 	import AreaMap from '$lib/areaMap/AreaMap.svelte';
-	import MapLocation from '$lib/areaMap/MapLocation.svelte';
+	import MapLocation from '$lib/areaMap/MapPosition.svelte';
 	import {
 		convertLocationsFromFormat,
 		displayLocation,
@@ -40,13 +40,13 @@
 		<!-- <Map {currentFloor} bind:rawPosition> -->
 		{#snippet mapLocations()}
 			<MapLocation
-				unit={distanceUnit}
+				inputUnit={distanceUnit}
 				name="Calculated"
 				position={locationsInScreenPixels['Raw']}
 				displayedPosition={locations['Calculated']}
 			/>
 			<MapLocation
-				unit={distanceUnit}
+				inputUnit={distanceUnit}
 				position={locationsInScreenPixels['Origin']}
 				colour="oklch(62.3% 0.214 259.815)"
 			/>

@@ -5,6 +5,10 @@ import { useStoredLocations } from '$lib/locations/locationsData';
 export function useStoredTestInputs() {
 	useStoredMap();
 	useStoredLocations();
+	useStoredTestVideo();
+}
+
+export function useStoredTestVideo() {
 	const arucoVideoURL = localStorage.getItem('aruco-video-url');
 	arucoVideoSource.set(arucoVideoURL);
 }

@@ -4,7 +4,9 @@
 	import MapPosition from '$lib/areaMap/MapPosition.svelte';
 	import ArucoCVVideoPreview from '$lib/arucoCVVideo/ArucoCVVideoPreview.svelte';
 	import type { PositionReading } from '$lib/locations/format';
+	import { locations } from '$lib/locations/locationsData';
 	import { createPlayer } from '$lib/test/playbackTimes';
+	import { createAccuracyCalculator } from '$lib/test/positionAccuracy';
 	import type { Dayjs } from 'dayjs';
 	import dayjs from 'dayjs';
 
@@ -104,13 +106,15 @@
 		downloadEl.click();
 	}
 
-	generatedPositions = new LocationsGenerator().create(
+	// square task in the middle
+	const generator = new LocationsGenerator();
+	generatedPositions = generator.create(
 		0.2,
-		89 / Math.PI,
-		3,
-		3,
+		90 / Math.PI,
 		0,
-		dayjs('2025-09-21 06:33:52.024Z'),
+		0,
+		0,
+		dayjs('2026-04-16T09:35:27.150Z'),
 		[
 			[0, 1],
 			[-90, 1],
@@ -120,20 +124,36 @@
 		]
 	);
 
-	const player = createPlayer();
-	player.setTime(0);
+	// rectangle task
+	generatedPositions.push(
+		...generator.create(0.2, 90 / Math.PI, 0, 0, 0, dayjs('2026-04-16T09:37:26.043Z'), [
+			[0, 1],
+			[-90, 2],
+			[-90, 1],
+			[-90, 2],
+			[-90, 0]
+		])
+	);
+	$effect(() => locations.set({ generated: generatedPositions }));
+
+	const accuracyCalculator = createAccuracyCalculator();
+	const player = createPlayer(accuracyCalculator);
 	console.log($player);
 
-	let currentPosition = $derived(
-		generatedPositions.findLast(({ timestamp }) =>
-			dayjs(timestamp).isBefore($player.currentPlayingTimestamp)
-		)!
-	);
+	// let currentPosition = $derived(
+	// 	generatedPositions.findLast(({ timestamp }) =>
+	// 		dayjs(timestamp).isBefore($player.currentPlayingTimestamp)
+	// 	)!
+	// );
 </script>
 
 <h1>Create a set of locations over time</h1>
 
 <p>Provide a path</p>
+<div class="pointer-events-none absolute -z-10 overflow-hidden">
+	<ArucoCVVideoPreview {player} />
+</div>
+{$player.currentPlayingTimestamp}
 
 {#if generatedPositions}
 	<AreaMap mapImageURL={$mapImageUrls[Object.keys($mapImageUrls)[0]]}>
@@ -141,11 +161,11 @@
 			{#each generatedPositions as position (position.timestamp)}
 				<MapPosition origin={{ x: 0, y: 0 }} {position} inputUnit="metres" />
 			{/each}
-			{#if currentPosition}
+			{#if $player.currentLocations['generated']}
 				<MapPosition
 					origin={{ x: 0, y: 0 }}
-					position={currentPosition}
-					orientation={currentPosition.orientation}
+					position={$player.currentLocations['generated']}
+					orientation={$player.currentLocations['generated'].orientation}
 					inputUnit="metres"
 					name="Generated Position"
 					colour="#3BB9FF"
@@ -156,9 +176,3 @@
 
 	<button onclick={downloadGeneratedLocations}>Download Locations</button>
 {/if}
-
-{$player.currentPlayingTimestamp}
-
-<div class="absolute -z-10 overflow-hidden">
-	<ArucoCVVideoPreview {player} />
-</div>

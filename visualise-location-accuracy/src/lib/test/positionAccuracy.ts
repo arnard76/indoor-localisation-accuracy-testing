@@ -1,11 +1,19 @@
-import { derived } from 'svelte/store';
-import dayjs from 'dayjs';
 import type { LocationReading, MapLocation } from '$lib/locations/format';
 import { locations } from '$lib/locations/locationsData';
+import dayjs from 'dayjs';
+import { derived, writable } from 'svelte/store';
+import { findCurrentLocation } from './playbackTimes';
 
-const thresholdForCVTimestampsEquivalentToWifinderTimestamp = 250; // any CV location recorded at a time that is between wifinder_timestamp - 250ms and wifinder_timestamp + 250ms
+export const thresholdForTimestampsEquivalentToTimestamp = 250; // any CV location recorded at a time that is between wifinder_timestamp - 250ms and wifinder_timestamp + 250ms
 
-export function locationDiff(loc1: MapLocation, loc2: MapLocation) {
+export function areTimestampsEquivalent(time1: string | Dayjs, time2: string | Dayjs) {
+	return (
+		Math.abs(dayjs(time1).diff(dayjs(time2), 'milliseconds')) <=
+		thresholdForTimestampsEquivalentToTimestamp
+	);
+}
+
+export function calcLocationDiff(loc1: MapLocation, loc2: MapLocation) {
 	return {
 		x: loc1.x - loc2.x,
 		y: loc1.y - loc2.y
@@ -16,58 +24,105 @@ export function distanceDiffFromLocationDiff(locDiff: MapLocation) {
 	return (locDiff.x ** 2 + locDiff.y ** 2) ** 0.5;
 }
 
-export function compareLocations(locations1: LocationReading[], locations2: LocationReading[]) {
+export function distanceDiffFromLocations(loc1: MapLocation, loc2: MapLocation) {
+	const locDiff = calcLocationDiff(loc1, loc2);
+	return distanceDiffFromLocationDiff(locDiff);
+}
+
+export function calcDistanceDiffs(locations1: LocationReading[], locations2: LocationReading[]) {
 	return locations1
-		.map(({ x, y, timestamp: wifinderTimestamp }) => {
+		.map(({ x, y, timestamp: set1Timestamp }) => {
 			// TODO: remove any anomolous CV readings before average
 			// INSTEAD OF REMOVING ANOMOLOUS AVERAGES!
 
-			// find average aruco location
-			const similarArucoLocations = locations2.filter(
-				({ timestamp: arucoTimestamp }) =>
-					Math.abs(dayjs(arucoTimestamp).diff(wifinderTimestamp, 'milliseconds')) <
-					thresholdForCVTimestampsEquivalentToWifinderTimestamp
-			);
+			const averageSet2Location = findCurrentLocation(locations2, dayjs(set1Timestamp));
+			if (!areTimestampsEquivalent(averageSet2Location.timestamp, set1Timestamp)) return;
 
-			const totalLocation: MapLocation = { x: 0, y: 0 };
-			similarArucoLocations.forEach((similarArucoLocation) => {
-				totalLocation.y += similarArucoLocation.x;
-				totalLocation.y += similarArucoLocation.y;
-			});
-			const averageArucoLocation: MapLocation = {
-				x: totalLocation.x / similarArucoLocations.length,
-				y: totalLocation.y / similarArucoLocations.length
-			};
+			// const similarsLocationsInSet2 = locations2.filter(
+			// 	({ timestamp }) =>
+			// 		Math.abs(dayjs(timestamp).diff(set1Timestamp, 'milliseconds')) <
+			// 		thresholdForCVTimestampsEquivalentToWifinderTimestamp
+			// );
 
-			// calculate difference between average aruco location and wifinder location
-			const locationDifference = locationDiff({ x, y }, averageArucoLocation);
+			// const totalLocation: MapLocation = { x: 0, y: 0 };
+			// similarsLocationsInSet2.forEach((similarSet2Location) => {
+			// 	totalLocation.y += similarSet2Location.x;
+			// 	totalLocation.y += similarSet2Location.y;
+			// });
+			// const averageSet2Location: MapLocation = {
+			// 	x: totalLocation.x / similarsLocationsInSet2.length,
+			// 	y: totalLocation.y / similarsLocationsInSet2.length
+			// };
+
+			const locationDifference = calcLocationDiff({ x, y }, averageSet2Location);
 
 			return {
-				timestamp: wifinderTimestamp,
+				timestamp: set1Timestamp,
 				distanceDiff: distanceDiffFromLocationDiff(locationDifference)
 			};
 		})
-		.filter(({ distanceDiff }) => distanceDiff < 400);
+		.filter((diff) => diff && diff.distanceDiff < 0.8);
 }
 
-// accuracy of each wifinder point at every second
+export function averageDistanceDiff(
+	distanceDiffs: {
+		timestamp: string | dayjs.Dayjs;
+		distanceDiff: number;
+	}[]
+) {
+	const validAccuracyValues = distanceDiffs.filter(
+		(accuracy) => !Number.isNaN(accuracy.distanceDiff)
+	);
+	let total = 0;
 
-export const wiFinderLocationAccuracy = derived([locations], ([$locations]) =>
-	compareLocations($locations['wifinder'], $locations['aruco'])
-);
+	validAccuracyValues.forEach((accuracy) => {
+		total += accuracy.distanceDiff;
+	});
+	return Math.round((100 * total) / validAccuracyValues.length) / 100;
+}
 
-export const averageWifinderAccuracy = derived(
-	wiFinderLocationAccuracy,
-	($wiFinderLocationAccuracy) => {
-		const validAccuracyValues = $wiFinderLocationAccuracy.filter(
-			(accuracy) => !Number.isNaN(accuracy.distanceDiff)
-		);
-		let total = 0;
+export function findAccuracyFor(comparisons: Comparison[], idealSet: string, setToMeasure: string) {
+	return comparisons.find((c) => c.idealSet === idealSet && setToMeasure == c.setToMeasure);
+}
 
-		validAccuracyValues.forEach((accuracy) => {
-			total += accuracy.distanceDiff;
+type LocationSets = { setToMeasure: string; idealSet: string };
+
+export type Comparison = LocationSets & {
+	diffs: any[];
+	// currentDiff: number;
+	average: number;
+};
+
+export function createAccuracyCalculator() {
+	const setsToCompare = writable<LocationSets[]>([]);
+
+	const fullData = derived([setsToCompare, locations], ([$setsToCompare, $locations]) => {
+		console.log('recalculating accuracies');
+		const comparisons: Comparison[] = [];
+		$setsToCompare.forEach(({ idealSet, setToMeasure }) => {
+			const ideal = $locations[idealSet];
+			const toMeasure = $locations[setToMeasure];
+			if (!ideal || !toMeasure) return;
+			console.log({ ideal, toMeasure });
+
+			const distanceDiffsForSet = calcDistanceDiffs(toMeasure, ideal);
+			const average = averageDistanceDiff(distanceDiffsForSet);
+
+			comparisons.push({
+				idealSet,
+				setToMeasure,
+				diffs: distanceDiffsForSet,
+				average
+			});
 		});
-		return Math.round((100 * total) / validAccuracyValues.length) / 100;
-	},
-	null
-);
+
+		return comparisons;
+	});
+
+	return {
+		...fullData,
+		testNewSet(setToMeasure: string, idealSet: string) {
+			setsToCompare.update((v) => [...v, { idealSet, setToMeasure }]);
+		}
+	};
+}
