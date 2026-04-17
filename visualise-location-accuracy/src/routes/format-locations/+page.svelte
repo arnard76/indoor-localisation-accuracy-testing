@@ -1,4 +1,6 @@
 <script lang="ts">
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+
 	import { type ImportableLocationReading, type LocationReading } from '$lib/locations/format';
 	import { areTimestampsEquivalent, distanceDiffFromLocations } from '$lib/test/positionAccuracy';
 	import { downloadSomething } from '$lib/testArtifacts/util';
@@ -19,8 +21,8 @@
 		const origin = locations.at(0);
 		if (!origin) throw Error('locations data empty');
 
-		return locations.map(({ timestamp, x, y }) => {
-			return { timestamp, x: x - origin.x, y: y - origin.y };
+		return locations.map(({ timestamp, x, y, ...rest }) => {
+			return { ...rest, timestamp, x: x - origin.x, y: y - origin.y };
 		});
 	}
 
@@ -78,9 +80,12 @@
 		});
 	}
 
-	function reflectInXAxis(locations: LocationReading[]): LocationReading[] {
+	function reflectInYAxis(locations: LocationReading[]): LocationReading[] {
 		return locations.map((location) => {
-			return { ...location, x: -1 * location.x, y: location.y };
+			const transformed = { ...location, x: -1 * location.x, y: location.y };
+			if (!location.orientation) return transformed;
+
+			return { ...transformed, orientation: 180 - location.orientation };
 		});
 	}
 
@@ -116,8 +121,13 @@
 		});
 	}
 
+	function odomTrimFirst1m11sOriginateAlign(locations: any[]) {
+		return reflectInYAxis(setOriginToFirstValue(trimFirst1m11s(formatOdomLogs(locations))));
+	}
+
 	const formatters = {
 		formatOdomLogs,
+		odomTrimFirst1m11sOriginateAlign,
 		arucoTrim6sOriginate,
 		aruco: (locations: ImportableLocationReading[]) =>
 			locations.map((location) => cleanLocationObject(location)),
@@ -125,7 +135,7 @@
 		trimFirst1m11s,
 		trim6s: trimFirst6s,
 		// rotateFromOrigin,
-		reflectInXAxis,
+		reflectInXAxis: reflectInYAxis,
 		removeAnomaliesLike5mJumps
 	};
 
@@ -150,7 +160,6 @@
 	}
 </script>
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 <h1>Format locations</h1>
 
 <select bind:value={selectedFormat}>
