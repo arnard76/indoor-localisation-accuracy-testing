@@ -138,7 +138,7 @@
 
 	const accuracyCalculator = createAccuracyCalculator();
 	const player = createPlayer(accuracyCalculator);
-	console.log($player);
+	console.log(generatedPositions);
 
 	// let currentPosition = $derived(
 	// 	generatedPositions.findLast(({ timestamp }) =>

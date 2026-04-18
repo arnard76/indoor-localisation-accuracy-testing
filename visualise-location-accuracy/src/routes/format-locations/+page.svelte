@@ -22,7 +22,16 @@
 		if (!origin) throw Error('locations data empty');
 
 		return locations.map(({ timestamp, x, y, ...rest }) => {
-			return { ...rest, timestamp, x: x - origin.x, y: y - origin.y };
+			if (rest.orientation === undefined)
+				return { ...rest, timestamp, x: x - origin.x, y: y - origin.y };
+
+			return {
+				...rest,
+				timestamp,
+				x: x - origin.x,
+				y: y - origin.y,
+				orientation: rest.orientation - origin.orientation
+			};
 		});
 	}
 
@@ -83,9 +92,10 @@
 	function reflectInYAxis(locations: LocationReading[]): LocationReading[] {
 		return locations.map((location) => {
 			const transformed = { ...location, x: -1 * location.x, y: location.y };
-			if (!location.orientation) return transformed;
+			// if (!location.orientation) return transformed;
 
-			return { ...transformed, orientation: 180 - location.orientation };
+			return transformed;
+			// return { ...transformed };
 		});
 	}
 
@@ -117,17 +127,17 @@
 			const formattedTimestamp = new Date(reading.time * 1000).toISOString();
 			console.log(formattedTimestamp);
 
-			return { ...reading, timestamp: formattedTimestamp, orientation: reading.yaw_deg };
+			return { ...reading, timestamp: formattedTimestamp, orientation: -1 * reading.yaw_deg };
 		});
 	}
 
-	function odomTrimFirst1m11sOriginateAlign(locations: any[]) {
+	function odomTrimFirst1m11sOriginateReflected(locations: any[]) {
 		return reflectInYAxis(setOriginToFirstValue(trimFirst1m11s(formatOdomLogs(locations))));
 	}
 
 	const formatters = {
 		formatOdomLogs,
-		odomTrimFirst1m11sOriginateAlign,
+		odomTrimFirst1m11sOriginateReflected,
 		arucoTrim6sOriginate,
 		aruco: (locations: ImportableLocationReading[]) =>
 			locations.map((location) => cleanLocationObject(location)),
@@ -135,7 +145,7 @@
 		trimFirst1m11s,
 		trim6s: trimFirst6s,
 		// rotateFromOrigin,
-		reflectInXAxis: reflectInYAxis,
+		reflectInYAxis,
 		removeAnomaliesLike5mJumps
 	};
 

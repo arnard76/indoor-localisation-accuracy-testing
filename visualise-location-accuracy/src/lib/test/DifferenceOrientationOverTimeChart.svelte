@@ -8,23 +8,25 @@
 
 	let {
 		player,
-		distanceDiffs,
+		orientationDiffs,
 		averageAccuracy
 	}: {
 		player: ReturnType<typeof createPlayer>;
-		distanceDiffs: Comparison['diffs'];
+		orientationDiffs: Comparison['diffs'];
 		averageAccuracy: number;
 	} = $props();
+
+	$inspect(orientationDiffs);
 
 	C.register(annotation);
 
 	let data = $derived({
-		labels: distanceDiffs.map(({ timestamp }) =>
+		labels: orientationDiffs.map(({ timestamp }) =>
 			dayjs(timestamp).diff($player.startTimeForTestPreview, 'seconds')
 		),
 		datasets: [
 			{
-				data: distanceDiffs.map(({ distanceDiff }) => distanceDiff),
+				data: orientationDiffs.map(({ orientationDiff }) => orientationDiff),
 				fill: false,
 				borderColor: 'rgb(75, 192, 192)',
 				tension: 0.1
@@ -51,7 +53,7 @@
 			},
 			title: {
 				display: true,
-				text: 'Location Accuracy'
+				text: 'Orientation Accuracy'
 			},
 			annotation: {
 				annotations: {
@@ -90,7 +92,7 @@
 				type: 'linear',
 				title: {
 					display: true, // Set to true to show the label
-					text: 'Accuracy / m' // The text for your Y-axis label
+					text: 'Difference in Orientation / °' // The text for your Y-axis label
 				}
 			}
 		}

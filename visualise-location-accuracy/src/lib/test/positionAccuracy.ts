@@ -1,4 +1,4 @@
-import type { LocationReading, MapLocation } from '$lib/locations/format';
+import type { LocationReading, MapLocation, MapPosition } from '$lib/locations/format';
 import { locations } from '$lib/locations/locationsData';
 import dayjs from 'dayjs';
 import { derived, writable } from 'svelte/store';
@@ -13,10 +13,22 @@ export function areTimestampsEquivalent(time1: string | Dayjs, time2: string | D
 	);
 }
 
-export function calcLocationDiff(loc1: MapLocation, loc2: MapLocation) {
+export function calcLocationDiff(
+	loc1: MapLocation | MapPosition,
+	loc2: MapLocation | MapPosition
+): MapLocation | MapPosition {
+	let orientation = NaN;
+	if (loc1.orientation !== undefined && loc2.orientation !== undefined) {
+		orientation = (loc1.orientation - loc2.orientation) % 360;
+		if (orientation > 180) {
+			orientation -= 360;
+		}
+	}
+
 	return {
 		x: loc1.x - loc2.x,
-		y: loc1.y - loc2.y
+		y: loc1.y - loc2.y,
+		orientation
 	};
 }
 
@@ -31,7 +43,7 @@ export function distanceDiffFromLocations(loc1: MapLocation, loc2: MapLocation) 
 
 export function calcDistanceDiffs(locations1: LocationReading[], locations2: LocationReading[]) {
 	return locations1
-		.map(({ x, y, timestamp: set1Timestamp }) => {
+		.map(({ x, y, timestamp: set1Timestamp, ...rest }) => {
 			// TODO: remove any anomolous CV readings before average
 			// INSTEAD OF REMOVING ANOMOLOUS AVERAGES!
 
@@ -54,14 +66,32 @@ export function calcDistanceDiffs(locations1: LocationReading[], locations2: Loc
 			// 	y: totalLocation.y / similarsLocationsInSet2.length
 			// };
 
-			const locationDifference = calcLocationDiff({ x, y }, averageSet2Location);
+			const locationDifference = calcLocationDiff({ ...rest, x, y }, averageSet2Location);
 
 			return {
 				timestamp: set1Timestamp,
-				distanceDiff: distanceDiffFromLocationDiff(locationDifference)
+				distanceDiff: distanceDiffFromLocationDiff(locationDifference),
+				orientationDiff: locationDifference.orientation
 			};
 		})
 		.filter((diff) => diff && diff.distanceDiff < 0.8);
+}
+
+export function averageOrientationDiff(
+	orientationDiffs: {
+		timestamp: string | dayjs.Dayjs;
+		orientationDiff: number;
+	}[]
+) {
+	const validAccuracyValues = orientationDiffs.filter(
+		(accuracy) => !Number.isNaN(accuracy.orientationDiff)
+	);
+	let total = 0;
+
+	validAccuracyValues.forEach((accuracy) => {
+		total += Math.abs(accuracy.orientationDiff);
+	});
+	return Math.round((100 * total) / validAccuracyValues.length) / 100;
 }
 
 export function averageDistanceDiff(
@@ -91,6 +121,7 @@ export type Comparison = LocationSets & {
 	diffs: any[];
 	// currentDiff: number;
 	average: number;
+	orientationAverage: number;
 };
 
 export function createAccuracyCalculator() {
@@ -105,14 +136,17 @@ export function createAccuracyCalculator() {
 			if (!ideal || !toMeasure) return;
 			console.log({ ideal, toMeasure });
 
-			const distanceDiffsForSet = calcDistanceDiffs(toMeasure, ideal);
-			const average = averageDistanceDiff(distanceDiffsForSet);
+			const diffsForSet = calcDistanceDiffs(toMeasure, ideal);
+
+			const average = averageDistanceDiff(diffsForSet);
+			const orientationAverage = averageOrientationDiff(diffsForSet);
 
 			comparisons.push({
 				idealSet,
 				setToMeasure,
-				diffs: distanceDiffsForSet,
-				average
+				diffs: diffsForSet,
+				average,
+				orientationAverage
 			});
 		});
 
