@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import AreaMap from '$lib/areaMap/AreaMap.svelte';
-	import MapLocation from '$lib/areaMap/MapLocation.svelte';
+	import MapLocation from '$lib/areaMap/MapPosition.svelte';
 	import {
 		convertLocationsFromFormat,
 		displayLocation,
@@ -10,7 +11,6 @@
 	} from '$lib/locations/format';
 	import { mapImagePixelsToScreenPixelsScale } from '$lib/locations/pixelScale';
 
-	let currentFloor = $state(1);
 	let origin = $state({ x: 0, y: 0 }); // TODO: keep this in the right pixels scale too
 	let rawPosition = $state({ x: 0, y: 0 });
 	let calculated = $derived({ x: rawPosition.x - origin.x, y: origin.y - rawPosition.y });
@@ -115,7 +115,7 @@
 </form>
 
 {#if validAreaImages.length !== 0}
-	<div class="max-w-2/3 flex flex-col items-start">
+	<div class="flex max-w-2/3 flex-col items-start">
 		<h2>Area Map Preview</h2>
 
 		<div class="flex w-full gap-2">
@@ -125,13 +125,14 @@
 					<AreaMap mapImageLabel={label} mapImageURL={imageURL} bind:rawPosition>
 						{#snippet mapLocations()}
 							<MapLocation
-								unit={distanceUnit}
+								origin={{ x: 0, y: 0 }}
+								inputUnit={distanceUnit}
 								name="Calculated"
 								position={locationsInScreenPixels['Raw']}
-								displayedPosition={locations['Calculated']}
 							/>
 							<MapLocation
-								unit={distanceUnit}
+								origin={{ x: 0, y: 0 }}
+								inputUnit={distanceUnit}
 								position={locationsInScreenPixels['Origin']}
 								colour="oklch(62.3% 0.214 259.815)"
 							/>
@@ -205,7 +206,7 @@
 			</div>
 		</div>
 
-		<a class="button" href="/input-locations" onclick={saveImage}>
+		<a class="button" href={resolve('/input-locations')} onclick={saveImage}>
 			Input locations to test this area
 		</a>
 	</div>

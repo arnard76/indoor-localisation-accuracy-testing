@@ -92,6 +92,12 @@
 			{formatMillisecondsToTime($player.currentPlayingTimeMilliseconds)} /
 			{formatMillisecondsToTime($player.totalPlayingTimeMilliseconds)}
 		</p>
+
+		{#if $player.currentPlayingTimestamp}
+			<p>
+				{$player.currentPlayingTimestamp}
+			</p>
+		{/if}
 	</div>
 </div>
 

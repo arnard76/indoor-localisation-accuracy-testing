@@ -108,13 +108,14 @@ def estimate_marker_pose(frame, aruco_dict_type, aruco_marker_length, camera: Ca
                 print(e)
 
             if camera.camera_rotation and camera.camera_translation:
+                
                 marker_translation_in_world = transform_camera_to_world_coordinates(
                     marker_translation_metres, camera.camera_translation, camera.camera_rotation).tolist()
                 marker_translation_in_world = [round(marker_translation_in_world[0], 3),
                                                round(
                     marker_translation_in_world[1], 3),
                     round(marker_translation_in_world[2], 3)]
-                return {"augmented_frame": augmented_frame, "location_in_world": {"translation": marker_translation_in_world}, "location_from_camera": {"rotation": marker_rotation_degrees, "translation": marker_translation_metres}}
+                return {"augmented_frame": augmented_frame, "location_in_world": {"translation": marker_translation_in_world}, "location_from_camera": {"rotation": marker_rotation_degrees.tolist(), "translation": marker_translation_metres}}
 
             return {"augmented_frame": augmented_frame,  "location_from_camera": {"rotation": marker_rotation_degrees, "translation": marker_translation_metres}}
 
@@ -153,12 +154,13 @@ def find_marker_locations_from_video(video_source, video_start_time: datetime, a
             frame, aruco_dict_type, aruco_marker_length, camera, resize)
         if pose:
             location = pose['location_in_world']['translation']
+            orientation = pose['location_from_camera']['rotation']
 
             video_timestamp = round(video.get(cv2.CAP_PROP_POS_MSEC))
             timestamp = video_start_time + \
                 timedelta(milliseconds=video_timestamp)
             locations_and_timestamps.append(
-                {"location": location, "timestamp": str(timestamp)})
+                {"location": location, "timestamp": str(timestamp), "orientation": orientation})
 
             output_frame = pose["augmented_frame"]
 

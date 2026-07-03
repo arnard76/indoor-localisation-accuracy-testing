@@ -145,6 +145,8 @@
 							convertLocationFromFormat(location, 'metres', displayUnit),
 							displayUnit
 						)}
+
+						{location.orientation}
 					</p>
 				{/each}
 				<br />
