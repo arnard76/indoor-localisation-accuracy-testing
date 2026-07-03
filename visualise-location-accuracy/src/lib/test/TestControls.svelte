@@ -5,7 +5,7 @@
 	import { locations } from '$lib/locations/locationsData';
 	import { findAccuracyFor, type createAccuracyCalculator } from './positionAccuracy';
 	import { downloadSomething } from '$lib/testArtifacts/util';
-	import Menu from '$lib/components/Menu.svelte';
+	import Menu from '$lib/ui/Menu.svelte';
 	import Icon from '@iconify/svelte';
 
 	let {
