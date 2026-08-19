@@ -69,7 +69,7 @@ def estimate_marker_pose(frame, aruco_dict_type, aruco_marker_length, camera: Ca
                                          float(marker_translation_metres[1][0]), float(marker_translation_metres[2][0])]
             augmented_frame = cv2.putText(augmented_frame, f"x: {round(marker_translation_metres[0], 3)}", resize_graphic_positions((30,  30)), cv2.FONT_HERSHEY_SIMPLEX,
                                           font_size, (0, 238, 45), 2)
-            augmented_frame = cv2.putText(augmented_frame, f"y (ignore): {round(marker_translation_metres[1], 3)}", resize_graphic_positions((30,  60)), cv2.FONT_HERSHEY_SIMPLEX,
+            augmented_frame = cv2.putText(augmented_frame, f"y: {round(marker_translation_metres[1], 3)}", resize_graphic_positions((30,  60)), cv2.FONT_HERSHEY_SIMPLEX,
                                           font_size, (0, 238, 45), 2)
             augmented_frame = cv2.putText(augmented_frame, f"z: {round(marker_translation_metres[2], 3)}", resize_graphic_positions((30,  90)), cv2.FONT_HERSHEY_SIMPLEX,
                                           font_size, (0, 238, 45), 2)
@@ -184,3 +184,70 @@ def find_marker_locations_from_video(video_source, video_start_time: datetime, a
 
 # TODO: create output video with marker highlighted in frames where it was detected
 # Great for debugging and demo purposes
+
+
+def locate_marker_from_live_video(video_source: int, aruco_dict_type,  aruco_marker_length, camera: Camera, visualise=False, on_locate=lambda timestamp, location, orientation: None):
+    """
+    returns locations & timestamps
+
+    video_source = camera index (for live video)
+    """
+
+    try:
+        video_source = int(video_source)
+    except ValueError as value_error:
+        if (not os.path.isfile(video_source)):
+            print(
+                f"No valid video source provided. Camera Index is not an integer and Video file path doesn't exist: {video_source}. ")
+            sys.exit(0)
+
+    video = cv2.VideoCapture(video_source)
+    time.sleep(2.0)
+    resize = 1
+    start_time = datetime.now()
+    # For slowing down the video
+    # original_fps = video.get(cv2.CAP_PROP_FPS)
+    # speed_reduction_factor = 1
+    # delay_ms = int(1000 / (original_fps / speed_reduction_factor))
+
+    locations_and_timestamps = []
+
+    while True:
+        frame_exists, frame = video.read()
+
+        if not frame_exists:
+            break
+
+        pose = estimate_marker_pose(
+            frame, aruco_dict_type, aruco_marker_length, camera, resize)
+        if pose:
+            location = pose['location_in_world']['translation']
+            orientation = pose['location_from_camera']['rotation']
+
+            video_timestamp = round(video.get(cv2.CAP_PROP_POS_MSEC))
+            timestamp = start_time + \
+                timedelta(milliseconds=video_timestamp)
+            
+            on_locate(str(timestamp), location, orientation)
+            
+            locations_and_timestamps.append(
+                {"location": location, "timestamp": str(timestamp), "orientation": orientation})
+
+            output_frame = pose["augmented_frame"]
+
+        else:
+            output_frame = frame
+        if visualise:
+            output_frame = cv2.resize(
+                output_frame, None, fx=resize, fy=resize)
+            cv2.imshow('ArUco Marker Pose', output_frame)
+
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q'):
+            break
+        # cv2.waitKey(delay_ms)
+
+    video.release()
+    cv2.destroyAllWindows()
+
+    return locations_and_timestamps
