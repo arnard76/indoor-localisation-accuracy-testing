@@ -1,6 +1,8 @@
 # ArUCo markers and Computer Vision for Localisation
 This module was modified from [ArUCo-Markers-Pose-Estimation-Generation-Python](https://github.com/GSNCodes/ArUCo-Markers-Pose-Estimation-Generation-Python). The original license still applies to this code regardless of these modifications.
 
+<video controls src="https://github.com/arnard76/indoor-localisation-accuracy-testing/raw/refs/heads/3D-location-testing-and-visulisation/ArUCo-markers-cv-localisation-method/demo/quick-check.mp4" title="Title"></video>
+
 ## Purpose
 
 The purpose of this module is to convert a video into an array of locations & timestamps like this:
