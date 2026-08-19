@@ -1,7 +1,7 @@
-import { nullLocation, type LocationReading } from '$lib/locations/format';
+import { nullPosition, type PositionReading } from '$lib/locations/format';
 import dayjs, { Dayjs } from 'dayjs';
 import { derived, get, writable } from 'svelte/store';
-import { locations } from '../locations/locationsData';
+import { positions } from '../locations/locationsData';
 import type { createAccuracyCalculator } from './positionAccuracy';
 
 export function findCurrentObject<Type extends { timestamp: Dayjs | string }>(
@@ -15,32 +15,20 @@ export function findCurrentObject<Type extends { timestamp: Dayjs | string }>(
 	);
 }
 
-export function findCurrentLocation(
-	locations: LocationReading[],
-	currentPlayingTimestamp: Dayjs
-): LocationReading {
-	return (
-		findCurrentObject(locations, currentPlayingTimestamp) || {
-			...nullLocation,
-			timestamp: currentPlayingTimestamp
-		}
-	);
-}
-
 export function createPlayer(accuracyCalculator: ReturnType<typeof createAccuracyCalculator>) {
 	const currentPlayingTimeSeconds = writable(0);
 
 	const fullData = derived(
-		[currentPlayingTimeSeconds, locations, accuracyCalculator],
-		([$currentPlayingTimeSeconds, $locations, $accuracyCalculator]) => {
-			if (Object.keys($locations).length === 0) throw Error("locations aren't defined");
+		[currentPlayingTimeSeconds, positions, accuracyCalculator],
+		([$currentPlayingTimeSeconds, $positions, $accuracyCalculator]) => {
+			if (Object.keys($positions).length === 0) throw Error("locations aren't defined");
 
-			const startTimeForTestPreview = Object.values($locations)
+			const startTimeForTestPreview = Object.values($positions)
 				.map((locationReadings) => dayjs(locationReadings.at(0)?.timestamp))
 				.sort((a, b) => (a.isAfter(b) ? 1 : -1))
 				.at(0);
 
-			const endTimeForTestPreview = Object.values($locations)
+			const endTimeForTestPreview = Object.values($positions)
 				.map((locationReadings) => dayjs(locationReadings.at(-1)?.timestamp))
 				.sort((a, b) => (a.isBefore(b) ? 1 : -1))
 				.at(0);
@@ -48,13 +36,21 @@ export function createPlayer(accuracyCalculator: ReturnType<typeof createAccurac
 			const currentPlayingTimeMilliseconds = Math.round($currentPlayingTimeSeconds * 1000);
 			const currentPlayingTimestamp = startTimeForTestPreview?.add(currentPlayingTimeMilliseconds);
 
-			const currentLocations: Record<string, LocationReading> = Object.fromEntries(
-				Object.entries($locations).map(([groupName, locationsInGroup]) => {
+			const currentPositions = Object.fromEntries(
+				Object.entries($positions).map(([groupName, locationsInGroup]) => {
 					const currentLocation = currentPlayingTimestamp
-						? findCurrentLocation(locationsInGroup, currentPlayingTimestamp)
-						: { ...nullLocation, timestamp: '' };
+						? findCurrentObject(locationsInGroup, currentPlayingTimestamp) || {
+								...nullPosition,
+								timestamp: currentPlayingTimestamp
+							}
+						: { ...nullPosition, timestamp: '' };
 					return [groupName, currentLocation];
 				})
+			);
+
+			const totalPlayingTimeMilliseconds = dayjs(endTimeForTestPreview).diff(
+				startTimeForTestPreview,
+				'milliseconds'
 			);
 
 			return {
@@ -63,11 +59,8 @@ export function createPlayer(accuracyCalculator: ReturnType<typeof createAccurac
 				startTimeForTestPreview,
 				endTimeForTestPreview,
 				currentPlayingTimestamp,
-				totalPlayingTimeMilliseconds: dayjs(endTimeForTestPreview).diff(
-					startTimeForTestPreview,
-					'milliseconds'
-				),
-				currentLocations
+				totalPlayingTimeMilliseconds,
+				currentPositions
 				// currentAccuracy
 			};
 		},
@@ -78,7 +71,7 @@ export function createPlayer(accuracyCalculator: ReturnType<typeof createAccurac
 			endTimeForTestPreview: dayjs(),
 			currentPlayingTimestamp: dayjs(),
 			totalPlayingTimeMilliseconds: 0,
-			currentLocations: {} as Record<string, LocationReading>
+			currentPositions: {} as Record<string, PositionReading>
 		}
 	);
 

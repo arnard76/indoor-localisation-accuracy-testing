@@ -3,7 +3,7 @@
 // SCIENCE CENTRE VALUES
 // const distanceMetres = 7.5;
 // const sameDistancePixels = 72.47068372797375;
-const distanceMetres = 16;
+const distanceMetres = 500;
 const sameDistancePixels = 800;
 const distanceMetres2 = 270 / 100;
 const sameDistancePixels2 = 287;

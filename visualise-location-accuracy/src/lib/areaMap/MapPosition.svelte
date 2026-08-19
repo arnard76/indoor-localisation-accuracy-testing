@@ -34,7 +34,11 @@
 		fixed?: boolean;
 	} = $props();
 
-	const positionFromOrigin = $derived({ x: position.x + origin.x, y: position.y + origin.y });
+	const positionFromOrigin = $derived({
+		x: position.x + origin.x,
+		y: position.y + origin.y,
+		z: position.z + origin.z
+	});
 	const locationToShow = $derived(
 		convertLocationFromFormat(positionFromOrigin, inputUnit, displayUnit)
 	);

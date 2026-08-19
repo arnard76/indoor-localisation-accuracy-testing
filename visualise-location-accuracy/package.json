@@ -44,6 +44,7 @@
 		]
 	},
 	"dependencies": {
+		"@robot-web-tools/ros3djs": "^0.17.0-SNAPSHOT",
 		"@threlte/core": "^8.5.16",
 		"@threlte/extras": "^9.21.0",
 		"chart.js": "^4.5.0",

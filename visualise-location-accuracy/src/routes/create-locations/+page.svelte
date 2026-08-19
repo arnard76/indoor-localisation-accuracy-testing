@@ -4,7 +4,7 @@
 	import MapPosition from '$lib/areaMap/MapPosition.svelte';
 	import ArucoCVVideoPreview from '$lib/arucoCVVideo/ArucoCVVideoPreview.svelte';
 	import type { PositionReading } from '$lib/locations/format';
-	import { locations } from '$lib/locations/locationsData';
+	import { positions } from '$lib/locations/locationsData';
 	import { createPlayer } from '$lib/test/playbackTimes';
 	import { createAccuracyCalculator } from '$lib/test/positionAccuracy';
 	import type { Dayjs } from 'dayjs';
@@ -134,7 +134,7 @@
 			[-90, 0]
 		])
 	);
-	$effect(() => locations.set({ generated: generatedPositions }));
+	$effect(() => positions.set({ generated: generatedPositions }));
 
 	const accuracyCalculator = createAccuracyCalculator();
 	const player = createPlayer(accuracyCalculator);
@@ -161,11 +161,11 @@
 			{#each generatedPositions as position (position.timestamp)}
 				<MapPosition origin={{ x: 0, y: 0 }} {position} inputUnit="metres" />
 			{/each}
-			{#if $player.currentLocations['generated']}
+			{#if $player.currentPositions['generated']}
 				<MapPosition
 					origin={{ x: 0, y: 0 }}
-					position={$player.currentLocations['generated']}
-					orientation={$player.currentLocations['generated'].orientation}
+					position={$player.currentPositions['generated']}
+					orientation={$player.currentPositions['generated'].orientation}
 					inputUnit="metres"
 					name="Generated Position"
 					colour="#3BB9FF"

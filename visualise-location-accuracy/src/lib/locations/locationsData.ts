@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { writable } from 'svelte/store';
-import { sortLocationReadings, type LocationReading } from './format';
+import { sortReadings, type LocationReading, type PositionReading } from './format';
 
 export function addToStoredLocations(name: string, data: any) {
 	const storedLocations = localStorage.getItem('locations') || '{}';
@@ -18,11 +18,11 @@ export function removeFromStoredLocations(name: string) {
 
 export function useStoredLocations() {
 	const storedLocations = localStorage.getItem('locations');
-	locations.set(
+	positions.set(
 		Object.fromEntries(
 			Object.entries(storedLocations ? JSON.parse(storedLocations) : {}).map(
 				([name, locations]) => {
-					return [name, sortLocationReadings(locations as any)];
+					return [name, sortReadings(locations as any)];
 				}
 			)
 		)
@@ -30,4 +30,4 @@ export function useStoredLocations() {
 }
 
 // TODO: find a way to get the start time of the video
-export const locations = writable<Record<string, LocationReading[]>>({});
+export const positions = writable<Record<string, PositionReading[]>>({});

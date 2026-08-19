@@ -2,7 +2,7 @@
 	import { arucoVideoSource } from '$lib/arucoCVVideo';
 	import {
 		addToStoredLocations,
-		locations,
+		positions,
 		removeFromStoredLocations,
 		useStoredLocations
 	} from '$lib/locations/locationsData';
@@ -20,7 +20,7 @@
 	}
 
 	let locationSets: { name: string; file: File | null }[] = $derived(
-		Object.keys($locations).map((a) => ({ name: a, file: null }))
+		Object.keys($positions).map((a) => ({ name: a, file: null }))
 	);
 	let newLocationSet: { name: string; file: File | null } = $state({ name: '', file: null });
 </script>

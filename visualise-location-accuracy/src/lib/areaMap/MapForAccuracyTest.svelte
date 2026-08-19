@@ -6,7 +6,7 @@
 		type LocationUnits,
 		type MapLocation
 	} from '$lib/locations/format';
-	import { locations } from '$lib/locations/locationsData';
+	import { positions } from '$lib/locations/locationsData';
 	import type { createPlayer } from '$lib/test/playbackTimes';
 	import { createAccuracyCalculator } from '$lib/test/positionAccuracy';
 	import { mapImageUrls } from './area';
@@ -22,19 +22,19 @@
 	} = $props();
 
 	let currentFloor = $state(Object.keys($mapImageUrls)[0]);
-	let origin = $state({ x: 22, y: 23 }); // TODO: keep this in the right pixels scale too
-	let rawPixelPosition = $state({ x: 0, y: 0 });
+	let origin = $state({ x: 0, y: 0, z: 0 }); // TODO: keep this in the right pixels scale too
+	let rawPixelPosition = $state({ x: 0, y: 0, z: 0 });
 	let rawPosition = $derived(convertLocationFromFormat(rawPixelPosition, 'pixels'));
 
 	let locationsInMetres = $derived<Record<string, MapLocation>>({
 		Origin: origin,
 		Raw: rawPosition,
-		...$player!.currentLocations
+		...$player!.currentPositions
 	});
 
 	let locationColours = $derived<Record<string, string>>({
 		...Object.fromEntries(
-			Object.keys($locations).map((setName) => [setName, `hsl(${Math.random() * 360}, 85%, 70%)`])
+			Object.keys($positions).map((setName) => [setName, `hsl(${Math.random() * 360}, 85%, 70%)`])
 		),
 
 		Origin: 'red',
@@ -52,17 +52,17 @@
 				inputUnit="metres"
 				{displayUnit}
 				position={locationsInMetres['Origin']}
-				origin={{ x: 0, y: 0 }}
+				origin={{ x: 0, y: 0, z: 0 }}
 				fixed
 			/>
 			<!-- <MapPosition inputUnit="metres" {displayUnit} position={locationsInMetres['Raw']} {origin} /> -->
 
-			{#each Object.entries($locations) as [name] (name)}
+			{#each Object.entries($positions) as [name] (name)}
 				<MapPosition
 					inputUnit="metres"
 					{displayUnit}
-					position={$player.currentLocations[name]}
-					orientation={$player.currentLocations[name].orientation}
+					position={$player.currentPositions[name]}
+					orientation={$player.currentPositions[name].orientation}
 					colour={locationColours[name]}
 					{origin}
 				/>

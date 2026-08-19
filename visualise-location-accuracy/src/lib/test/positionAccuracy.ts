@@ -1,8 +1,13 @@
-import type { LocationReading, MapLocation, MapPosition } from '$lib/locations/format';
-import { locations } from '$lib/locations/locationsData';
+import {
+	nullLocation,
+	type LocationReading,
+	type MapLocation,
+	type MapPosition
+} from '$lib/locations/format';
+import { positions } from '$lib/locations/locationsData';
 import dayjs from 'dayjs';
 import { derived, writable } from 'svelte/store';
-import { findCurrentLocation } from './playbackTimes';
+import { findCurrentObject } from './playbackTimes';
 
 export const thresholdForTimestampsEquivalentToTimestamp = 250; // any CV location recorded at a time that is between wifinder_timestamp - 250ms and wifinder_timestamp + 250ms
 
@@ -47,7 +52,10 @@ export function calcDistanceDiffs(locations1: LocationReading[], locations2: Loc
 			// TODO: remove any anomolous CV readings before average
 			// INSTEAD OF REMOVING ANOMOLOUS AVERAGES!
 
-			const averageSet2Location = findCurrentLocation(locations2, dayjs(set1Timestamp));
+			const averageSet2Location = findCurrentObject(locations2, dayjs(set1Timestamp)) || {
+				...nullLocation,
+				timestamp: set1Timestamp
+			};
 			if (!areTimestampsEquivalent(averageSet2Location.timestamp, set1Timestamp)) return;
 
 			// const similarsLocationsInSet2 = locations2.filter(
@@ -127,7 +135,7 @@ export type Comparison = LocationSets & {
 export function createAccuracyCalculator() {
 	const setsToCompare = writable<LocationSets[]>([]);
 
-	const fullData = derived([setsToCompare, locations], ([$setsToCompare, $locations]) => {
+	const fullData = derived([setsToCompare, positions], ([$setsToCompare, $locations]) => {
 		console.log('recalculating accuracies');
 		const comparisons: Comparison[] = [];
 		$setsToCompare.forEach(({ idealSet, setToMeasure }) => {

@@ -2,7 +2,7 @@
 	import dayjs from 'dayjs';
 	import PlaybackTest from '$lib/test/PlaybackTest.svelte';
 	import type { createPlayer } from './playbackTimes';
-	import { locations } from '$lib/locations/locationsData';
+	import { positions } from '$lib/locations/locationsData';
 	import { findAccuracyFor, type createAccuracyCalculator } from './positionAccuracy';
 	import { downloadSomething } from '$lib/testArtifacts/util';
 	import Menu from '$lib/ui/Menu.svelte';
@@ -24,10 +24,10 @@
 		downloadSomething(
 			'text/json',
 			'utf-8',
-			`${dayjs($locations['wifinder'][0].timestamp).toString()}.json`,
+			`${dayjs($positions['wifinder'][0].timestamp).toString()}.json`,
 			encodeURIComponent(
 				JSON.stringify({
-					locationsToMeasure: $locations[setToMeasure],
+					locationsToMeasure: $positions[setToMeasure],
 					accuracyOfLocations: accuracy?.diffs,
 					averageWifinderAccuracy: accuracy?.average
 				})

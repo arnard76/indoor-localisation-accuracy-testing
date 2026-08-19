@@ -5,6 +5,7 @@
     "": {
       "name": "visualise-location-accuracy",
       "dependencies": {
+        "@robot-web-tools/ros3djs": "^0.17.0-SNAPSHOT",
         "@threlte/core": "^8.5.16",
         "@threlte/extras": "^9.21.0",
         "chart.js": "^4.5.0",
@@ -150,6 +151,8 @@
     "@nodelib/fs.walk": ["@nodelib/fs.walk@1.2.8", "", { "dependencies": { "@nodelib/fs.scandir": "2.1.5", "fastq": "^1.6.0" } }, "sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg=="],
 
     "@polka/url": ["@polka/url@1.0.0-next.29", "", {}, "sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww=="],
+
+    "@robot-web-tools/ros3djs": ["@robot-web-tools/ros3djs@0.17.0-SNAPSHOT", "", {}, "sha512-eACBK3G/6IxOO2Bizu1Am21dWaa40Vo9MosHhbxCIWrWpbl6L2L+/E8kLUHJrLqlu72HxebhrDhWHze0aZndiA=="],
 
     "@rollup/rollup-android-arm-eabi": ["@rollup/rollup-android-arm-eabi@4.60.1", "", { "os": "android", "cpu": "arm" }, "sha512-d6FinEBLdIiK+1uACUttJKfgZREXrF0Qc2SmLII7W2AD8FfiZ9Wjd+rD/iRuf5s5dWrr1GgwXCvPqOuDquOowA=="],
 
