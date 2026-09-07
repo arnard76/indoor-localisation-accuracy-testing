@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 
 def transform_camera_to_world_coordinates(coordinates_in_camera_axes, camera_translation, camera_rotation):
@@ -39,3 +40,23 @@ def transform_camera_to_world_coordinates(coordinates_in_camera_axes, camera_tra
     rotated_points_3d = np.array(coordinates_in_camera_axes) @ R
     world_coordinates = rotated_points_3d + camera_translation
     return world_coordinates
+
+
+def transform_orientation_in_euler_to_quarternion(orientation):
+    # Define your angles in degrees (e.g., Yaw=90, Pitch=45, Roll=0)
+    # 'zyx' specifies the sequence of axes rotated
+    r = R.from_euler('yzx', orientation, degrees=True)
+
+    #   xzy
+    #     xyz
+    # zyx
+    # yxz
+
+    # yzx - maybe
+    # zxy
+
+    # Get the quaternion [x, y, z, w]
+    # Note: SciPy outputs [x, y, z, w] format, while some math texts use [w, x, y, z]
+    quaternion = r.as_quat() 
+    formatted=  {'x': quaternion[0], 'y': quaternion[1], 'z': quaternion[2], 'w': quaternion[3]}
+    return formatted

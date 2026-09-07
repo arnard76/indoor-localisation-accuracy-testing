@@ -62,7 +62,7 @@ def estimate_marker_pose(frame, aruco_dict_type, aruco_marker_length, camera: Ca
                 continue
 
             # Display Marker Position
-            marker_rotation_degrees = np.degrees(marker_rotation_vector)
+            marker_rotation_degrees = np.degrees(marker_rotation_vector).flatten()
             marker_translation_metres = marker_translation_vector / 100
             font_size = resize_graphic_position(0.5)
             marker_translation_metres = [float(marker_translation_metres[0][0]),
@@ -204,16 +204,12 @@ def locate_marker_from_live_video(video_source: int, aruco_dict_type,  aruco_mar
     video = cv2.VideoCapture(video_source)
     time.sleep(2.0)
     resize = 1
-    start_time = datetime.now()
-    # For slowing down the video
-    # original_fps = video.get(cv2.CAP_PROP_FPS)
-    # speed_reduction_factor = 1
-    # delay_ms = int(1000 / (original_fps / speed_reduction_factor))
 
     locations_and_timestamps = []
 
     while True:
         frame_exists, frame = video.read()
+        timestamp = datetime.now()
 
         if not frame_exists:
             break
@@ -223,18 +219,13 @@ def locate_marker_from_live_video(video_source: int, aruco_dict_type,  aruco_mar
         if pose:
             location = pose['location_in_world']['translation']
             orientation = pose['location_from_camera']['rotation']
-
-            video_timestamp = round(video.get(cv2.CAP_PROP_POS_MSEC))
-            timestamp = start_time + \
-                timedelta(milliseconds=video_timestamp)
-            
-            on_locate(str(timestamp), location, orientation)
+            print([round(x) for x in orientation])
+            on_locate(timestamp, location, orientation)
             
             locations_and_timestamps.append(
                 {"location": location, "timestamp": str(timestamp), "orientation": orientation})
 
             output_frame = pose["augmented_frame"]
-
         else:
             output_frame = frame
         if visualise:
@@ -245,7 +236,6 @@ def locate_marker_from_live_video(video_source: int, aruco_dict_type,  aruco_mar
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
             break
-        # cv2.waitKey(delay_ms)
 
     video.release()
     cv2.destroyAllWindows()
