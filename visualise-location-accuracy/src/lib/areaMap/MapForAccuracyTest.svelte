@@ -1,144 +1,128 @@
 <script lang="ts">
-	import MapLocation from '$lib/areaMap/MapLocation.svelte';
-	import {
-		currentArucoLocation as arucoTestLocation,
-		currentWifinderLocation as wifinderLocation
-	} from '$lib/locations/currentLocations';
+	import MapPosition from '$lib/areaMap/MapPosition.svelte';
 	import {
 		convertLocationFromFormat,
-		convertLocationsFromFormat,
 		displayLocation,
-		scaleLocations,
 		type LocationUnits,
-		type MapLocations as MapLocationsType
+		type MapLocation
 	} from '$lib/locations/format';
-	import { mapImagePixelsToScreenPixelsScale } from '../locations/pixelScale';
+	import { positions } from '$lib/locations/locationsData';
+	import type { createPlayer } from '$lib/test/playbackTimes';
+	import { createAccuracyCalculator } from '$lib/test/positionAccuracy';
 	import { mapImageUrls } from './area';
 	import AreaMap from './AreaMap.svelte';
 
-	let currentFloor = $state(Object.keys($mapImageUrls)[0]);
-	let origin = $state({ x: 0, y: 0 }); // TODO: keep this in the right pixels scale too
-	let rawPosition = $state({ x: 0, y: 0 });
-	let calculated = $derived({ x: rawPosition.x - origin.x, y: origin.y - rawPosition.y });
+	let {
+		player,
+		accuracyCalculator
+	}: {
+		player: ReturnType<typeof createPlayer>;
 
-	let locationsInPixels = $derived({
+		accuracyCalculator: ReturnType<typeof createAccuracyCalculator>;
+	} = $props();
+
+	let currentFloor = $state(Object.keys($mapImageUrls)[0]);
+	let origin = $state({ x: 0, y: 0, z: 0 }); // TODO: keep this in the right pixels scale too
+	let rawPixelPosition = $state({ x: 0, y: 0, z: 0 });
+	let rawPosition = $derived(convertLocationFromFormat(rawPixelPosition, 'pixels'));
+
+	let locationsInMetres = $derived<Record<string, MapLocation>>({
 		Origin: origin,
 		Raw: rawPosition,
-		Calculated: calculated,
-		'App Estimated Location': convertLocationFromFormat($wifinderLocation, 'metres'),
-		'ArUCo-marker Test': convertLocationFromFormat($arucoTestLocation, 'metres')
+		...$player!.currentPositions
 	});
 
-	let locationsInScreenPixels = $derived(
-		scaleLocations(locationsInPixels, $mapImagePixelsToScreenPixelsScale)
-	);
-	let locationsInMetres = $derived({
-		...convertLocationsFromFormat(locationsInPixels, 'pixels'),
-		'App Estimated Location': $wifinderLocation,
-		'ArUCo-marker Test': $arucoTestLocation
+	let locationColours = $derived<Record<string, string>>({
+		...Object.fromEntries(
+			Object.keys($positions).map((setName) => [setName, `hsl(${Math.random() * 360}, 85%, 70%)`])
+		),
+
+		Origin: 'red',
+		Raw: 'lightblue'
 	});
 
-	let distanceUnit = $state<LocationUnits>('metres');
-	let locations = $derived<MapLocationsType>(
-		distanceUnit === 'pixels' ? locationsInPixels : locationsInMetres
-	);
-
-	let locationDifference = $derived({
-		x: locations['App Estimated Location'].x - locations['ArUCo-marker Test'].x,
-		y: locations['App Estimated Location'].y - locations['ArUCo-marker Test'].y
-	});
-
-	let distanceDifference = $derived(
-		Math.sqrt(locationDifference.x ** 2 + locationDifference.y ** 2)
-	);
+	let displayUnit = $state<LocationUnits>('metres');
 </script>
 
-<div>
+<div class="flex flex-wrap">
 	<AreaMap mapImageURL={$mapImageUrls[currentFloor]} bind:rawPosition>
-		<!-- <Map {currentFloor} bind:rawPosition> -->
 		{#snippet mapLocations()}
-			<MapLocation
-				unit={distanceUnit}
-				name="Calculated"
-				position={locationsInScreenPixels['Raw']}
-				displayedPosition={locations['Calculated']}
+			<!-- <MapShapeOverTime /> -->
+			<MapPosition
+				inputUnit="metres"
+				{displayUnit}
+				position={locationsInMetres['Origin']}
+				origin={{ x: 0, y: 0, z: 0 }}
+				fixed
 			/>
-			<MapLocation
-				unit={distanceUnit}
-				position={locationsInScreenPixels['Origin']}
-				colour="oklch(62.3% 0.214 259.815)"
-			/>
+			<!-- <MapPosition inputUnit="metres" {displayUnit} position={locationsInMetres['Raw']} {origin} /> -->
 
-			<MapLocation
-				unit={distanceUnit}
-				name="WiFinder"
-				position={locationsInScreenPixels['App Estimated Location']}
-				displayedPosition={locations['App Estimated Location']}
-				colour="powderblue"
-			/>
-			<MapLocation
-				unit={distanceUnit}
-				name="ArUCo-marker Test"
-				displayedPosition={locations['ArUCo-marker Test']}
-				position={locationsInScreenPixels['ArUCo-marker Test']}
-				colour="#50a9be"
-			/>
+			{#each Object.entries($positions) as [name] (name)}
+				<MapPosition
+					inputUnit="metres"
+					{displayUnit}
+					position={$player.currentPositions[name]}
+					orientation={$player.currentPositions[name].orientation}
+					colour={locationColours[name]}
+					{origin}
+				/>
+			{/each}
 		{/snippet}
 		<!-- </Map> -->
 	</AreaMap>
-
-	<h2>Debug Panel</h2>
-	<div
-		class="debug-panel mb-4 flex w-full flex-wrap items-start gap-2 p-6 font-semibold text-white"
-	>
-		<div class="widget">
-			<h3>Units</h3>
-			<div class="button-group">
-				<button
-					onclick={() => (distanceUnit = 'metres')}
-					class={distanceUnit === 'metres' ? 'selected' : 'unselected'}>metres</button
-				>
-				<button
-					onclick={() => (distanceUnit = 'pixels')}
-					class={distanceUnit === 'pixels' ? 'selected' : 'unselected'}>pixels</button
-				>
+	<div>
+		<h2>Debug Panel</h2>
+		<div
+			class="debug-panel mb-4 flex w-min flex-wrap items-start gap-2 p-6 font-semibold text-white"
+		>
+			<div class="widget">
+				<h3>Units</h3>
+				<div class="button-group">
+					<button
+						onclick={() => (displayUnit = 'metres')}
+						class={displayUnit === 'metres' ? 'selected' : 'unselected'}>metres</button
+					>
+					<button
+						onclick={() => (displayUnit = 'pixels')}
+						class={displayUnit === 'pixels' ? 'selected' : 'unselected'}>pixels</button
+					>
+				</div>
 			</div>
-		</div>
 
-		<div class="widget">
-			<fieldset>
-				<h3>Origin</h3>
-				<label for="x_origin_input">X</label>
-				<input
-					placeholder="X"
-					id="x_origin_input"
-					value={origin.x}
-					type="number"
-					oninput={(e) => {
-						const x_origin_input = parseInt(e.currentTarget.value);
-						if (!Number.isNaN(x_origin_input)) origin.x = x_origin_input;
-					}}
-				/>
-				<label for="y_origin_input">Y</label>
-				<input
-					placeholder="Y"
-					id="y_origin_input"
-					value={origin.y}
-					type="number"
-					oninput={(e) => {
-						let y_origin_input = parseInt(e.currentTarget.value);
-						if (distanceUnit === 'metres')
-							if (!Number.isNaN(y_origin_input)) origin.y = y_origin_input;
-					}}
-				/>
-			</fieldset>
-			<label for="floor_input">Floor</label>
-			<select id="floor_input" bind:value={currentFloor}>
-				{#each Object.keys($mapImageUrls) as mapLabel (mapLabel)}
-					<option value={mapLabel}>{mapLabel}</option>
-				{/each}
-			</select>
-			<!-- <input
+			<div class="widget">
+				<fieldset>
+					<h3>Origin</h3>
+					<label for="x_origin_input">X</label>
+					<input
+						placeholder="X"
+						id="x_origin_input"
+						value={origin.x}
+						type="number"
+						oninput={(e) => {
+							const x_origin_input = parseInt(e.currentTarget.value);
+							if (!Number.isNaN(x_origin_input)) origin.x = x_origin_input;
+						}}
+					/>
+					<label for="y_origin_input">Y</label>
+					<input
+						placeholder="Y"
+						id="y_origin_input"
+						value={origin.y}
+						type="number"
+						oninput={(e) => {
+							let y_origin_input = parseInt(e.currentTarget.value);
+							if (displayUnit === 'metres')
+								if (!Number.isNaN(y_origin_input)) origin.y = y_origin_input;
+						}}
+					/>
+				</fieldset>
+				<label for="floor_input">Floor</label>
+				<select id="floor_input" bind:value={currentFloor}>
+					{#each Object.keys($mapImageUrls) as mapLabel (mapLabel)}
+						<option value={mapLabel}>{mapLabel}</option>
+					{/each}
+				</select>
+				<!-- <input
 				id="floor_input"
 				value={currentFloor}
 				oninput={(e) => {
@@ -147,16 +131,48 @@
 				}}
 				type="number"
 			/> -->
-		</div>
+			</div>
 
-		<div class="widget min-w-96">
-			<h3>Locations</h3>
-			{#each Object.entries(locations) as [locationName, location] (locationName)}
-				<p>{locationName} | {displayLocation(location, distanceUnit)}</p>
-			{/each}
-			<br />
-			<p>Location Difference | {displayLocation(locationDifference, distanceUnit)}</p>
-			<p>Distance Difference: {distanceDifference.toFixed(3)}</p>
+			<div class="widget min-w-96">
+				<h3>Locations in {displayUnit}</h3>
+				{#each Object.entries(locationsInMetres) as [locationName, location] (locationName)}
+					<p
+						style="background-color: {locationColours[locationName]}; color: black;"
+						class="rounded-sm p-2"
+					>
+						{locationName}
+						{displayLocation(
+							convertLocationFromFormat(location, 'metres', displayUnit),
+							displayUnit
+						)}
+
+						{location.orientation}
+					</p>
+				{/each}
+				<br />
+
+				<!-- {#each $accuracyCalculator as comparison (comparison.idealSet + comparison.setToMeasure)}
+					<p>
+						Location Difference | {displayLocation(
+							convertLocationFromFormat(
+								calcLocationDiff(
+									$player.currentLocations[comparison.idealSet],
+									$player.currentLocations[comparison.setToMeasure]
+								),
+								'metres',
+								displayUnit
+							),
+							displayUnit
+						)}
+					</p>
+					<p>
+						Distance Difference: {distanceDiffFromLocations(
+							$player.currentLocations[comparison.idealSet],
+							$player.currentLocations[comparison.setToMeasure]
+						).toFixed(3)}
+					</p>
+				{/each} -->
+			</div>
 		</div>
 	</div>
 </div>

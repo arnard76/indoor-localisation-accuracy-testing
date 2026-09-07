@@ -1,13 +1,10 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import {
-		addTime,
-		currentPlayingTimeMilliseconds,
-		currentPlayingTimeSeconds,
-		totalPlayingTimeMilliseconds
-	} from './playbackTimes';
 	import { playing, playPauseMedia } from '$lib/arucoCVVideo';
 	import type { FormEventHandler } from 'svelte/elements';
+	import type { createPlayer } from './playbackTimes';
+
+	let { player }: { player: ReturnType<typeof createPlayer> } = $props();
 
 	let loopTest = $state(true);
 	// let playTestinterval: NodeJS.Timeout | null = null;
@@ -44,8 +41,8 @@
 	// });
 
 	$effect(() => {
-		if ($currentPlayingTimeMilliseconds > $totalPlayingTimeMilliseconds) {
-			currentPlayingTimeSeconds.set(0);
+		if ($player.currentPlayingTimeMilliseconds > $player.totalPlayingTimeMilliseconds) {
+			player.resetTime();
 			if (!loopTest) {
 				playing.set(false);
 				playPauseMedia();
@@ -56,7 +53,7 @@
 	});
 
 	const inputNewPlayingTime: FormEventHandler<HTMLInputElement> = (e) => {
-		currentPlayingTimeSeconds.set(parseInt(e.currentTarget.value) / 1000);
+		player.setTime(parseInt(e.currentTarget.value) / 1000);
 	};
 
 	// TODO: when no loop, the test should pause when it gets to the end
@@ -67,9 +64,9 @@
 	<input
 		type="range"
 		class="w-full min-w-96"
-		value={$currentPlayingTimeMilliseconds}
+		value={$player.currentPlayingTimeMilliseconds}
 		oninput={inputNewPlayingTime}
-		max={$totalPlayingTimeMilliseconds}
+		max={$player.totalPlayingTimeMilliseconds}
 	/>
 	<div class="flex w-full items-center justify-between gap-4 px-4">
 		<button
@@ -81,7 +78,7 @@
 		</button>
 
 		<div class="flex items-center gap-4 px-4">
-			<button onclick={() => addTime(-1)}><Icon icon="tabler:skip-back" /> </button>
+			<button onclick={() => player.addTime(-1)}><Icon icon="tabler:skip-back" /> </button>
 			<button class="active-button" onclick={playPauseMedia}>
 				{#if $playing}
 					<Icon icon="tabler:pause" />
@@ -89,12 +86,18 @@
 					<Icon icon="tabler:play" />
 				{/if}
 			</button>
-			<button onclick={() => addTime(1)}><Icon icon="tabler:skip-forward" /></button>
+			<button onclick={() => player.addTime(1)}><Icon icon="tabler:skip-forward" /></button>
 		</div>
 		<p class="w-64">
-			{formatMillisecondsToTime($currentPlayingTimeMilliseconds)} /
-			{formatMillisecondsToTime($totalPlayingTimeMilliseconds)}
+			{formatMillisecondsToTime($player.currentPlayingTimeMilliseconds)} /
+			{formatMillisecondsToTime($player.totalPlayingTimeMilliseconds)}
 		</p>
+
+		{#if $player.currentPlayingTimestamp}
+			<p>
+				{$player.currentPlayingTimestamp}
+			</p>
+		{/if}
 	</div>
 </div>
 

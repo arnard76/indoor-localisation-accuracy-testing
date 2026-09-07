@@ -2,15 +2,28 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { pixelsToMetresScale } from './metreScale';
 
-export type LocationReading = { location: number[]; timestamp: string | Dayjs };
-export type MapLocation = { x: number; y: number };
+export type ImportableLocationReading = { location: number[]; timestamp: string };
+export type MapLocation = { x: number; y: number; z: number };
+export type MapPosition = {
+	x: number;
+	y: number;
+	z: number;
+	orientation: number;
+};
+export type LocationReading = MapLocation & { timestamp: string | Dayjs };
+export type PositionReading = MapPosition & { timestamp: string | Dayjs };
+
 export type LocationUnits = 'metres' | 'pixels';
 export type MapLocations = { [key: string]: MapLocation };
+
+export const nullLocation: MapLocation = { x: NaN, y: NaN, z: NaN };
+export const nullPosition: MapPosition = { x: NaN, y: NaN, z: NaN, orientation: NaN };
 
 export function scaleLocation(location: MapLocation, scale: number): MapLocation {
 	return {
 		x: location.x * scale,
-		y: location.y * scale
+		y: location.y * scale,
+		z: location.z * scale
 	};
 }
 
@@ -45,15 +58,23 @@ export function convertLocationsFromFormat(locationsInFormat: MapLocations, from
 }
 
 export function displayLocation(location: MapLocation, unit: LocationUnits): string {
-	const rounding = unit === 'pixels' ? 0 : 2;
-	return `X: ${location.x.toFixed(rounding)}, Y: ${location.y.toFixed(rounding)}`;
+	try {
+		const rounding = unit === 'pixels' ? 0 : 2;
+		return `(${location.x.toFixed(rounding)}, ${location.y.toFixed(rounding)})`;
+	} catch (e) {
+		console.log(e);
+		console.log({ location, unit });
+		throw Error(e);
+	}
 }
 
 /**
  * Sorts in chronological order
- * @param locationReadings
- * @returns sorted location readings (the first one is the earliest reading)
+ * @param readings
+ * @returns sorted readings (the first one is the earliest reading)
  */
-export function sortLocationReadings(locationReadings: LocationReading[]): LocationReading[] {
-	return locationReadings.sort((a, b) => (dayjs(a.timestamp).isBefore(b.timestamp) ? -1 : 1));
+export function sortReadings<ReadingType extends { timestamp: LocationReading['timestamp'] }>(
+	readings: ReadingType[]
+): ReadingType[] {
+	return readings.sort((a, b) => (dayjs(a.timestamp).isBefore(b.timestamp) ? -1 : 1));
 }

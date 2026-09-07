@@ -8,7 +8,6 @@
 	import { createPlayer } from '$lib/test/playbackTimes';
 	import { positions } from '$lib/locations/locationsData';
 	import { createAccuracyCalculator } from '$lib/test/positionAccuracy';
-	import Icon from '@iconify/svelte';
 	import { resolve } from '$app/paths';
 
 	$effect(() => {
@@ -21,45 +20,10 @@
 
 	const accuracyCalculator = createAccuracyCalculator();
 	const player = createPlayer(accuracyCalculator);
-	accuracyCalculator.testNewSet('goal', 'cv');
-	accuracyCalculator.testNewSet('odom', 'goal');
-	accuracyCalculator.testNewSet('odom', 'cv');
-
-	let setToMeasure = $state('');
-	let idealSet = $state('');
+	// accuracyCalculator.testNewSet('goal', 'cv');
 </script>
 
 <main class="flex h-screen flex-col justify-between overflow-hidden bg-green-400">
-	<!-- {#each $accuracyCalculator as comparison (comparison.idealSet + comparison.setToMeasure)}
-		<p>Testing {comparison.setToMeasure} using {comparison.idealSet}</p>
-	{/each} -->
-
-	<!-- <label>
-		Ideal locations
-
-		<select bind:value={idealSet}>
-			{#each Object.keys($locations) as setName (setName)}
-				<option value={setName}>{setName}</option>
-			{/each}
-		</select>
-	</label>
-
-	<label>
-		Locations to measure
-
-		<select bind:value={setToMeasure}>
-			{#each Object.keys($locations) as setName (setName)}
-				<option value={setName}>{setName}</option>
-			{/each}
-		</select>
-	</label>
-	<button
-		onclick={() =>
-			setToMeasure.length &&
-			idealSet.length &&
-			accuracyCalculator.testNewSet(setToMeasure, idealSet)}><Icon icon="tabler:plus" /></button
-	> -->
-
 	<div class="flex w-full flex-1 gap-2 overflow-y-auto">
 		<div class="flex w-full flex-col">
 			<MapForWiFinderTest {player} {accuracyCalculator} />

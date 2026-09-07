@@ -1,6 +1,9 @@
 # ArUCo markers and Computer Vision for Localisation
 This module was modified from [ArUCo-Markers-Pose-Estimation-Generation-Python](https://github.com/GSNCodes/ArUCo-Markers-Pose-Estimation-Generation-Python). The original license still applies to this code regardless of these modifications.
 
+
+https://github.com/user-attachments/assets/f96c039b-bd86-4312-868f-6efccbbd9363
+
 ## Purpose
 
 The purpose of this module is to convert a video into an array of locations & timestamps like this:
@@ -96,3 +99,53 @@ Happy Learning! Keep chasing your dreams!
 ## References
 1. https://docs.opencv.org/4.x/d9/d6d/tutorial_table_of_content_aruco.html
 2. https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html
+
+## Common Issues
+
+### OpenCV parse "warning"
+
+Shows during pose estimation / measuring locations, but doesn't stop the actual thing from running so just wait patiently.
+
+```
+indoor-localisation-accuracy-testing\ArUCo-markers-cv-localisation-method\calculating_location\pose_estimation.py:96: RuntimeWarning: invalid value encountered in cast
+  imgpts = imgpts.reshape(-1, 2).astype(int)
+OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'line'
+> Overload resolution failed:
+>  - Can't parse 'pt2'. Sequence item with index 0 has a wrong type
+>  - Can't parse 'pt2'. Sequence item with index 0 has a wrong type
+
+OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'line'
+> Overload resolution failed:
+>  - Can't parse 'pt2'. Sequence item with index 0 has a wrong type
+>  - Can't parse 'pt2'. Sequence item with index 0 has a wrong type
+
+OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'line'
+> Overload resolution failed:
+>  - Can't parse 'pt2'. Sequence item with index 0 has a wrong type
+>  - Can't parse 'pt2'. Sequence item with index 0 has a wrong type
+
+OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'line'
+> Overload resolution failed:
+>  - Can't parse 'pt2'. Sequence item with index 0 has a wrong type
+>  - Can't parse 'pt2'. Sequence item with index 0 has a wrong type
+
+OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'line'
+> Overload resolution failed:
+>  - Can't parse 'pt2'. Sequence item with index 0 has a wrong type
+>  - Can't parse 'pt2'. Sequence item with index 0 has a wrong type
+
+OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'line'
+> Overload resolution failed:
+>  - Can't parse 'pt2'. Sequence item with index 0 has a wrong type
+>  - Can't parse 'pt2'. Sequence item with index 0 has a wrong type
+
+OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'line'
+> Overload resolution failed:
+>  - Can't parse 'pt2'. Sequence item with index 0 has a wrong type
+>  - Can't parse 'pt2'. Sequence item with index 0 has a wrong type
+
+OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'line'
+> Overload resolution failed:
+>  - Can't parse 'pt2'. Sequence item with index 0 has a wrong type
+>  - Can't parse 'pt2'. Sequence item with index 0 has a wrong type
+```

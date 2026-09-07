@@ -3,19 +3,28 @@
 	import { Chart } from 'chart.js/auto';
 	import annotation from 'chartjs-plugin-annotation';
 	import dayjs from 'dayjs';
-	import { wiFinderLocationData } from '$lib/locations/locationsData';
-	import { currentPlayingTimeSeconds, startTimeForTestPreview } from './playbackTimes';
-	import { averageWifinderAccuracy, wiFinderLocationAccuracy } from './wifinderAccuracy';
+	import { type createPlayer } from './playbackTimes';
+	import { type Comparison } from './positionAccuracy';
+
+	let {
+		player,
+		distanceDiffs,
+		averageAccuracy
+	}: {
+		player: ReturnType<typeof createPlayer>;
+		distanceDiffs: Comparison['diffs'];
+		averageAccuracy: number;
+	} = $props();
 
 	C.register(annotation);
 
 	let data = $derived({
-		labels: $wiFinderLocationData.map(({ timestamp }) =>
-			dayjs(timestamp).diff($startTimeForTestPreview, 'seconds')
+		labels: distanceDiffs.map(({ timestamp }) =>
+			dayjs(timestamp).diff($player.startTimeForTestPreview, 'seconds')
 		),
 		datasets: [
 			{
-				data: $wiFinderLocationAccuracy,
+				data: distanceDiffs.map(({ distanceDiff }) => distanceDiff),
 				fill: false,
 				borderColor: 'rgb(75, 192, 192)',
 				tension: 0.1
@@ -23,7 +32,7 @@
 		]
 	});
 
-	let options = (currTime: number): ChartOptions => ({
+	let options: ChartOptions = $derived({
 		plugins: {
 			tooltip: {
 				displayColors: false,
@@ -42,7 +51,7 @@
 			},
 			title: {
 				display: true,
-				text: 'Accuracy Over Time'
+				text: 'Location Accuracy'
 			},
 			annotation: {
 				annotations: {
@@ -50,15 +59,15 @@
 						type: 'line',
 						borderColor: 'red',
 						borderWidth: 2,
-						xMin: currTime,
-						xMax: currTime
+						xMin: $player.currentPlayingTimeSeconds,
+						xMax: $player.currentPlayingTimeSeconds
 					},
 					averageLine: {
 						type: 'line',
 						borderColor: 'lightgreen',
 						borderWidth: 2,
-						yMin: $averageWifinderAccuracy || 0,
-						yMax: $averageWifinderAccuracy || 0,
+						yMin: averageAccuracy || 0,
+						yMax: averageAccuracy || 0,
 						label: {
 							content: 'Average WiFinder Accuracy'
 						}
@@ -67,6 +76,7 @@
 			}
 		},
 		maintainAspectRatio: false,
+		animation: false,
 		scales: {
 			x: {
 				min: 0,
@@ -86,24 +96,25 @@
 		}
 	});
 
-	function makeChart(ctx: HTMLCanvasElement) {
-		const myChart = new Chart(ctx, { type: 'line', data }); //init the chart
-		$effect(() => {
-			myChart.data = data;
-			myChart.update();
-			const unsub = currentPlayingTimeSeconds.subscribe((v) => {
-				myChart.options = options(v) as any;
-				myChart.update();
-			});
+	let chartEl: HTMLCanvasElement | undefined = $state();
+	let chart: Chart | undefined = $state();
 
-			return () => {
-				myChart.destroy();
-				unsub();
-			};
-		});
-	}
+	$effect(() => {
+		if (!chartEl) return;
+
+		if (!chart) {
+			chart = new Chart(chartEl, { type: 'line', data, options });
+		}
+	});
+
+	$effect(() => {
+		if (!chart) return;
+
+		chart.options = options;
+		chart.update();
+	});
 </script>
 
 <div class="h-120 max-w-full">
-	<canvas use:makeChart class="rounded-md bg-white p-2"></canvas>
+	<canvas bind:this={chartEl} class="rounded-md bg-white p-2"></canvas>
 </div>

@@ -1,55 +1,75 @@
 <script lang="ts">
-	import { useStoredTestInputs } from '$lib/test/testData';
-
-	localStorage.removeItem('wifinder-locations');
-	localStorage.removeItem('aruco-locations');
-	localStorage.removeItem('aruco-video-url');
-
-	let wifinderJsonFile = $state<null | FileList>(null);
-	let arucoTestJsonFile = $state<null | FileList>(null);
-	let arucoVideoURL = $state<null | string>(null);
+	import { arucoVideoSource } from '$lib/arucoCVVideo';
+	import {
+		addToStoredLocations,
+		positions,
+		removeFromStoredLocations,
+		useStoredLocations
+	} from '$lib/locations/locationsData';
+	import { useStoredTestVideo } from '$lib/test/testData';
+	import Icon from '@iconify/svelte';
 
 	let showExampleSection = $state(false);
 	let status = $state<null | string>(null);
-	$effect(() => {
-		if (
-			arucoTestJsonFile === null ||
-			wifinderJsonFile === null ||
-			arucoTestJsonFile.length === 0 ||
-			wifinderJsonFile.length === 0
-		)
-			return;
 
-		showExampleSection = false;
-		saveTestInputsFromFiles(arucoTestJsonFile[0], wifinderJsonFile[0], arucoVideoURL);
-	});
-
-	async function saveTestInputsFromFiles(
-		aruco: File,
-		wifinder: File,
-		arucoVideoURL: string | null
-	) {
-		localStorage.setItem('aruco-locations', await aruco.text());
-		localStorage.setItem('wifinder-locations', await wifinder.text());
-		if (arucoVideoURL) localStorage.setItem('aruco-video-url', arucoVideoURL);
-		useStoredTestInputs();
-		status = `Saved both location files in your browser.`;
+	async function saveTestInputsFromFiles(name: string, file: File) {
+		addToStoredLocations(name, JSON.parse(await file.text()));
+		useStoredLocations();
+		status = `Saved new location file in your browser.`;
+		newLocationSet = { name: '', file: null };
 	}
+
+	let locationSets: { name: string; file: File | null }[] = $derived(
+		Object.keys($positions).map((a) => ({ name: a, file: null }))
+	);
+	let newLocationSet: { name: string; file: File | null } = $state({ name: '', file: null });
 </script>
 
 <form>
-	<label>
-		Actual Location Logs (from localisation app)
-		<input type="file" bind:files={wifinderJsonFile} accept=".json" />
-	</label>
-	<label>
-		Aruco Test Locations
-		<input type="file" bind:files={arucoTestJsonFile} accept=".json" />
-	</label>
+	<h2>Existing sets</h2>
+	{#each locationSets as locationSet (locationSet.name)}
+		<div class="flex items-center gap-2">
+			<p>{locationSet.name}</p>
+			<button
+				class="p-1!"
+				onclick={() => {
+					removeFromStoredLocations(locationSet.name);
+					useStoredLocations();
+				}}><Icon icon="tabler:trash" /></button
+			>
+		</div>
+	{/each}
+	<input type="text" bind:value={newLocationSet['name']} placeholder="Name" />
+	<input
+		type="file"
+		onchange={(e) => {
+			if (!e.currentTarget.files) return;
+			newLocationSet['file'] = e.currentTarget.files[0];
+		}}
+		accept=".json"
+	/>
+	<button
+		onclick={() => {
+			if (!newLocationSet.file) return;
+			locationSets.push(newLocationSet);
+			saveTestInputsFromFiles(newLocationSet.name, newLocationSet.file);
+		}}><Icon icon="tabler:plus" /></button
+	>
 
 	<label>
-		Aruco Video URL (optional)
-		<input type="text" bind:value={arucoVideoURL} />
+		Video URL of Movements (optional)
+		<input
+			type="text"
+			onchange={(e) => {
+				const arucoVideoURL = e.currentTarget.value;
+				localStorage.setItem('aruco-video-url', arucoVideoURL);
+				useStoredTestVideo();
+			}}
+		/>
+
+		{#if $arucoVideoSource}
+			<video class="w-full" muted autoplay src={$arucoVideoSource}></video>
+		{/if}
 	</label>
 
 	<div>
